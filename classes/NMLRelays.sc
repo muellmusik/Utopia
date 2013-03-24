@@ -1,9 +1,9 @@
 // for history, etc.
 CodeRelay {
-	var addrBook, oscPath, oscFunc, <>post;
+	var addrBook, <>post, oscPath, oscFunc;
 
-	*new {|addrBook, oscPath = '/codeRelay', post = false|
-		^super.newCopyArgs(addrBook, oscPath, post).init;
+	*new {|addrBook, post = false, oscPath = '/codeRelay'|
+		^super.newCopyArgs(addrBook, post, oscPath).init;
 	}
 
 	init {
