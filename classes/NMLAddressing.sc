@@ -45,11 +45,11 @@ AddrBook {
 
 // who's there?
 Attendance {
-	var <addrBook, period, me, inOSCFunc, outOSCFunc, lastResponses;
+	var <addrBook, period, oscPath, me, inOSCFunc, outOSCFunc, lastResponses;
 
-	*new { |addrBook, period = 1.0, me|
+	*new { |addrBook, period = 1.0, me, oscPath = '/attendance'|
 		addrBook = addrBook ?? { AddrBook.new };
-		^super.newCopyArgs(addrBook, period).init(me);
+		^super.newCopyArgs(addrBook, period, oscPath).init(me);
 	}
 
 	// not totally sure about this me business...
@@ -62,6 +62,8 @@ Attendance {
 	}
 
 	makeOSCFuncs {
+		var replyPath;
+		replyPath = (oscPath ++ "-reply").asSymbol;
 		inOSCFunc = OSCFunc({|msg, time, addr|
 			var name, serverAddr;
 			name = msg[1];
@@ -71,11 +73,11 @@ Attendance {
 				addrBook.add(OSCitizen(name, addr, serverAddr));
 			});
 			lastResponses[name] = time;
-		}, '/censusForm');
+		}, replyPath);
 
 		outOSCFunc = OSCFunc({|msg, time, addr|
-			addr.sendMsg('/censusForm', me.name, me.serverAddr);
-		}, '/takeCensus');
+			addr.sendMsg(replyPath, me.name, me.serverAddr);
+		}, oscPath);
 	}
 
 	takeAttendance {
@@ -83,7 +85,7 @@ Attendance {
 		NetAddr.broadcastFlag = true;
 		broadcastAddr = NetAddrMP("255.255.255.255", 57120 + (0..7));
 		SystemClock.sched(0, {
-			broadcastAddr.sendMsg('/takeCensus');
+			broadcastAddr.sendMsg(oscPath);
 			if(period.notNil, { this.checkOnline; });
 			period;
 		});
