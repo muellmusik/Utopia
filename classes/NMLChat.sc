@@ -2,10 +2,10 @@
 // dependants can do something with it
 // use different oscPath for different 'channels' eg Shout
 Chatter {
-	var addrBook, oscPath, <>post, oscFunc;
+	var addrBook, <>post, oscPath, oscFunc;
 
-	*new {|addrBook, oscPath = '/chat', post = true|
-		^super.newCopyArgs(addrBook, oscPath, post).makeOSCFunc;
+	*new {|addrBook, post = true, oscPath = '/chat'|
+		^super.newCopyArgs(addrBook, post, oscPath).makeOSCFunc;
 	}
 
 	makeOSCFunc {
