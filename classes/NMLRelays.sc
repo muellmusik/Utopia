@@ -1,18 +1,19 @@
 // for history, etc.
 CodeRelay {
-	var addrBook, <>post, oscPath, oscFunc;
+	var addrBook, <>post, oscPath, codeDumpFunc, oscFunc;
 
-	*new {|addrBook, post = false, oscPath = '/codeRelay'|
-		^super.newCopyArgs(addrBook, post, oscPath).init;
+	*new {|addrBook, post = false, oscPath = '/codeRelay', codeDumpFunc|
+		^super.newCopyArgs(addrBook, post, oscPath, codeDumpFunc).init;
 	}
 
 	init {
 		var interpreter;
 		this.makeOSCFunc;
-		interpreter = thisProcess.interpreter;
-		interpreter.codeDump = interpreter.codeDump.addFunc({ |code|
+		codeDumpFunc = codeDumpFunc ? { |code|
 			addrBook.sendAll(oscPath, addrBook.me.name, code);
-		});
+		};
+		interpreter = thisProcess.interpreter;
+		interpreter.codeDump = interpreter.codeDump.addFunc(codeDumpFunc);
 	}
 
 	makeOSCFunc {
