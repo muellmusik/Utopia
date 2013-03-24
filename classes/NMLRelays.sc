@@ -11,7 +11,7 @@ CodeRelay {
 		this.makeOSCFunc;
 		interpreter = thisProcess.interpreter;
 		interpreter.codeDump = interpreter.codeDump.addFunc({ |code|
-			addrBook.sendAll(addrBook.me.name, code);
+			addrBook.sendAll(oscPath, addrBook.me.name, code);
 		});
 	}
 

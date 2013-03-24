@@ -21,10 +21,10 @@ Chatter {
 	}
 
 	sendAll {|chat|
-		addrBook.sendAll(addrBook.me.name, chat);
+		addrBook.sendAll(oscPath, addrBook.me.name, chat);
 	}
 
 	send {|name, chat|
-		addrBook[name].send(addrBook.me.name, chat);
+		addrBook[name].send(oscPath, addrBook.me.name, chat);
 	}
 }
