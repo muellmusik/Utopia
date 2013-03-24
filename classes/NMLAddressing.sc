@@ -44,7 +44,7 @@ AddrBook {
 }
 
 // who's there?
-CensusTaker {
+Attendance {
 	var <addrBook, period, me, inOSCFunc, outOSCFunc, lastResponses;
 
 	*new { |addrBook, period = 1.0, me|
@@ -58,7 +58,7 @@ CensusTaker {
 		me = addrBook.me;
 		lastResponses = IdentityDictionary.new;
 		this.makeOSCFuncs;
-		this.takeCensus;
+		this.takeAttendance;
 	}
 
 	makeOSCFuncs {
@@ -78,7 +78,7 @@ CensusTaker {
 		}, '/takeCensus');
 	}
 
-	takeCensus {
+	takeAttendance {
 		var broadcastAddr;
 		NetAddr.broadcastFlag = true;
 		broadcastAddr = NetAddrMP("255.255.255.255", 57120 + (0..7));
