@@ -80,6 +80,8 @@ Attendance {
 		}, oscPath);
 	}
 
+	free { inOSCFunc.free; outOSCFunc.free; }
+
 	takeAttendance {
 		var broadcastAddr;
 		NetAddr.broadcastFlag = true;

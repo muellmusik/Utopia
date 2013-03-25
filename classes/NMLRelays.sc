@@ -28,10 +28,15 @@ CodeRelay {
 			});
 		}, oscPath);
 	}
+
+	free { oscFunc.free; }
 }
 
 // this just adds Servers
 // need to send code as well
+// actually won't work as is, since we need a server, not a NetAddr
+// should we make a server here?
+// We can store a server in AddrBook, but that makes it slightly awkward for server subclasses
 SynthDefRelay {
 	var addrBook, libName;
 
@@ -43,5 +48,11 @@ SynthDefRelay {
 		var lib;
 		lib = SynthDescLib.getLib(libName);
 		addrBook.do({|citizen| lib.addServer(citizen.serverAddr) });
+	}
+
+	free {
+		var lib;
+		lib = SynthDescLib.getLib(libName);
+		addrBook.do({|citizen| lib.removeServer(citizen.serverAddr) });
 	}
 }

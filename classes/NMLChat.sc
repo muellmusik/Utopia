@@ -20,6 +20,8 @@ Chatter {
 		}, oscPath);
 	}
 
+	free { oscFunc.free; }
+
 	sendAll {|chat|
 		addrBook.sendAll(oscPath, addrBook.me.name, chat);
 	}
