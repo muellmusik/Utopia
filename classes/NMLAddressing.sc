@@ -9,6 +9,17 @@ OSCitizen {
 	}
 
 	online_ {|bool| if(bool != online, { online = bool; this.changed(\online) }) }
+
+	== {|other|
+		var result;
+		result = (name == other.name) && (addr == other.addr) && (serverAddr == other.serverAddr) && (online == other.online);
+		^result;
+	}
+
+	// post pretty
+	printOn { |stream|
+		stream << this.class.name << "(" <<* [name, addr, serverAddr, online] << ")"
+	}
 }
 
 // can we make this so that if there is no me we have a centralised system?
@@ -31,6 +42,8 @@ AddrBook {
 		this.add(meCitizen);
 		me = meCitizen;
 	}
+
+	at {|name| ^dict[name] }
 
 	remove {|oscitizen| dict[oscitizen.name] = nil; oscitizen.removeDependant(this); this.changed(\remove, oscitizen) }
 
@@ -68,10 +81,10 @@ Attendance {
 			var name, serverAddr;
 			name = msg[1];
 			serverAddr = msg[2];
-			addrBook[name].online = true;
 			if(lastResponses[name].isNil, {
 				addrBook.add(OSCitizen(name, addr, serverAddr));
 			});
+			addrBook[name].online = true;
 			lastResponses[name] = time;
 		}, replyPath);
 
