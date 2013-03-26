@@ -22,11 +22,11 @@ Chatter {
 
 	free { oscFunc.free; }
 
-	sendAll {|chat|
+	send {|chat|
 		addrBook.sendAll(oscPath, addrBook.me.name, chat);
 	}
 
-	send {|name, chat|
+	sendPrivate {|name, chat|
 		addrBook[name].send(oscPath, addrBook.me.name, chat);
 	}
 }
