@@ -5,7 +5,7 @@ OSCitizen {
 	var <name, <addr, <serverAddr, <online;
 
 	*new {|name, addr, serverAddr, online = true|
-		^super.newCopyArgs(name, addr, serverAddr, online);
+		^super.newCopyArgs(name.asSymbol, addr, serverAddr, online);
 	}
 
 	online_ {|bool| if(bool != online, { online = bool; this.changed(\online) }) }
