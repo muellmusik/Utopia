@@ -38,7 +38,11 @@ AddrBook {
 	add {|oscitizen| dict[oscitizen.name] = oscitizen; oscitizen.addDependant(this); this.changed(\add, oscitizen) }
 
 	addMe {|meCitizen|
-		meCitizen = meCitizen ?? {OSCitizen("whoami".unixCmdGetStdOut, NetAddr.localAddr, Server.default.addr)};
+		meCitizen = meCitizen ?? {
+			var name;
+			name = "whoami".unixCmdGetStdOut;
+			if(name.last == Char.nl, {name = name.drop(-1)});
+			OSCitizen(name, NetAddr.localAddr, Server.default.addr)};
 		this.add(meCitizen);
 		me = meCitizen;
 	}
