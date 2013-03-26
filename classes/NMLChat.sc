@@ -27,6 +27,6 @@ Chatter {
 	}
 
 	sendPrivate {|name, chat|
-		addrBook[name].send(oscPath, addrBook.me.name, chat);
+		addrBook.send(name, oscPath, addrBook.me.name, chat);
 	}
 }
