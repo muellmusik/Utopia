@@ -26,7 +26,7 @@ CodeRelay {
 				(name.asString ++ ":\n" ++ code).postln;
 				Char.nl.post;
 			});
-		}, oscPath);
+		}, oscPath, recvPort: addrBook.me.addr.port);
 	}
 
 	free { oscFunc.free; }

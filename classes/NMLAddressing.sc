@@ -92,11 +92,11 @@ Attendance {
 			});
 			addrBook[name].online = true;
 			lastResponses[name] = time;
-		}, replyPath);
+		}, replyPath, recvPort: addrBook.me.addr.port);
 
 		outOSCFunc = OSCFunc({|msg, time, addr|
 			addr.sendMsg(replyPath, me.name, me.serverAddr);
-		}, oscPath);
+		}, oscPath, recvPort: addrBook.me.addr.port);
 	}
 
 	free { inOSCFunc.free; outOSCFunc.free; }
