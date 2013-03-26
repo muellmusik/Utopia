@@ -57,6 +57,8 @@ AddrBook {
 
 	addrs { ^dict.values.collect({|citizen| citizen.addr }) }
 
+	citizens { ^dict.values }
+
 	serverAddrs { ^dict.values.collect({|citizen| citizen.serverAddr }) }
 }
 
