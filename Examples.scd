@@ -56,4 +56,4 @@
 ~registrant2.free;
 
 //cleanup
-~registrant.free; ~win.close;
+~registrant.free; ~registrar.free; ~win.close;
