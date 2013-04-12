@@ -35,6 +35,8 @@ AddrBook {
 
 	sendAll {|...msg| dict.do({|citizen| citizen.addr.sendMsg(*msg); }); }
 
+	sendAllBundle {|...msg| dict.do({|citizen| citizen.addr.sendBundle(*msg); }); }
+
 	sendExcluding {|name ...msg| dict.reject({|cit, citName| citName == name }).do({|citizen| citizen.addr.sendMsg(*msg); });}
 
 	add {|oscitizen| dict[oscitizen.name] = oscitizen; oscitizen.addDependant(this); this.changed(\add, oscitizen) }
