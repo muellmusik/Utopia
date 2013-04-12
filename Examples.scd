@@ -94,3 +94,35 @@ thisProcess.openUDPPort(3000);
 
 // cleanup
 ~chatter1.free; ~chatter2.free;
+
+
+////////////////////////
+// A very dumb clock example to show how you might integrate a clock with this
+// Master and slave clocks must share a common time base, e.g. using the NTP class
+// Ticks are scheduled with a small latency, so as to avoid drift
+
+// make some citizens and address books
+(
+thisProcess.openUDPPort(3000);
+~cit1 = OSCitizen(\me1, NetAddr.localAddr, s.addr);
+~cit2 = OSCitizen(\me2, NetAddr("127.0.0.1", 3000), s.addr); // I'll use a different port and simulate a different machine
+~addrBook = AddrBook();
+~addrBook.add(~cit1);
+~addrBook.add(~cit2);
+)
+
+// make some slaves first, then the master. They only advance when master ticks, so they should stay aligned
+(
+~slave1 = SlaveClock(NetAddr.localAddr);
+~slave2 = SlaveClock(NetAddr.localAddr);
+)
+~master = MasterClock(~addrBook); // add a master which starts ticking, this would probably be on a different machine or process
+
+~slave1.sched(1, {\foo.postln}); SystemClock.sched(1, {\bar.postln});
+
+Pbind(\degree, Pseq((1..4), inf)).play(~slave1); Pbind(\degree, Pseq((5..8), inf)).play(~slave2);
+~master.tempo = 3;
+
+Pbind(\degree, Pseq((2..5), inf), \dur, 3, \octave, 6).play(~slave2);
+
+~slave1.beats.postln; ~slave2.beats.postln; // these will be the same
