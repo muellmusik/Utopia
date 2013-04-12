@@ -4,6 +4,8 @@
 
 SlaveClock : Clock {
 	var masterAddr, oscPath, scheduler, tickOSCFunc, <tempo = 1;
+	var <beatsPerBar=4.0, barsPerBeat=0.25;
+	var <baseBarBeat=0.0, <baseBar=0.0;
 
 	*new {|masterAddr, oscPath = '/masterClockTick'|
 		^super.newCopyArgs(masterAddr, oscPath).init;
@@ -43,7 +45,7 @@ SlaveClock : Clock {
 	}
 
 	play { arg task, quant = 1;
-		this.schedAbs(quant.nextTimeOnGrid(this), task)
+		this.schedAbs(quant.nextTimeOnGrid(this).postln, task)
 	}
 
 	beatDur {
@@ -52,22 +54,18 @@ SlaveClock : Clock {
 	beats {
 		^scheduler.seconds;
 	}
-	nextTimeOnGrid {|quant= 1, phase= 0|
-		var beats;
-		beats = this.beats;
-		if(quant.isNumber.not, {
-			quant= quant.quant;
-		});
-		if(quant==0, {^beats+(phase*24)});
-		if(beats==0, {^phase*24});
-		^beats+((24*quant)-(beats%(24*quant)))+(phase%quant*24);
+	nextTimeOnGrid { arg quant = 1, phase = 0;
+		if (quant == 0) { ^this.beats + phase };
+		if (quant < 0) { quant = beatsPerBar * quant.neg };
+		if (phase < 0) { phase = phase % quant };
+		^roundUp(this.beats - baseBarBeat - (phase % quant), quant) + baseBarBeat + phase
 	}
 }
 
 MasterClock {
 	var addrBook, latency, granularity, oscPath, tempoClock;
 
-	*new { |addrBook, latency = 0.1, granularity = 0.005, oscPath = '/masterClockTick', tempo, beats, seconds, queueSize=256|
+	*new { |addrBook, latency = 0.05, granularity = 0.01, oscPath = '/masterClockTick', tempo, beats, seconds, queueSize=256|
 		^super.newCopyArgs(addrBook, latency, granularity, oscPath).init(tempo, beats, seconds, queueSize).startTicking;
 	}
 

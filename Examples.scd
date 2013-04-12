@@ -101,17 +101,15 @@ thisProcess.openUDPPort(3000);
 // Master and slave clocks must share a common time base, e.g. using the NTP class
 // Ticks are scheduled with a small latency, so as to avoid drift
 
-// make some citizens and address books
+// make a citizen and an address book
 (
-thisProcess.openUDPPort(3000);
 ~cit1 = OSCitizen(\me1, NetAddr.localAddr, s.addr);
-~cit2 = OSCitizen(\me2, NetAddr("127.0.0.1", 3000), s.addr); // I'll use a different port and simulate a different machine
 ~addrBook = AddrBook();
 ~addrBook.add(~cit1);
-~addrBook.add(~cit2);
 )
 
 // make some slaves first, then the master. They only advance when master ticks, so they should stay aligned
+// these could be on different machines, but you could also have multiple slaves on one machine...
 (
 ~slave1 = SlaveClock(NetAddr.localAddr);
 ~slave2 = SlaveClock(NetAddr.localAddr);
@@ -120,9 +118,12 @@ thisProcess.openUDPPort(3000);
 
 ~slave1.sched(1, {\foo.postln}); SystemClock.sched(1, {\bar.postln});
 
-Pbind(\degree, Pseq((1..4), inf)).play(~slave1); Pbind(\degree, Pseq((5..8), inf)).play(~slave2);
+Pbind(\degree, Pseq((1..4), inf)).play(~slave1, quant: 1); Pbind(\degree, Pseq((5..8), inf)).play(~slave2, quant: 1);
 ~master.tempo = 3;
 
-Pbind(\degree, Pseq((2..5), inf), \dur, 3, \octave, 6).play(~slave2);
+Pbind(\degree, Pseq((2..5), inf), \dur, 3, \octave, 6).play(~slave2, quant: 1);
 
-~slave1.beats.postln; ~slave2.beats.postln; // these will be the same
+~slave1.beats == ~slave2.beats; // these will be the same
+
+// cleanup
+~slave1.free; ~slave2.free; ~master.stop;
