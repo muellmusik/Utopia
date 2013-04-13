@@ -60,12 +60,13 @@ SynthDefRelay {
 // shared network dataspaces
 
 AbstractOSCDataSpace {
-	var addrBook, oscPath, oscFunc, dict;
+	var addrBook, oscPath, oscFunc, syncRecOSCFunc, syncRequestOSCFunc, dict;
 
 	init {|argAddrBook, argOSCPath|
 		addrBook = argAddrBook;
 		oscPath = argOSCPath;
 		dict = IdentityDictionary.new;
+		this.makeSyncRequestOSCFunc;
 		this.makeOSCFunc;
 	}
 
@@ -75,9 +76,37 @@ AbstractOSCDataSpace {
 
 	makeOSCFunc { this.subclassResponsibility }
 
+	makeSyncRequestOSCFunc {
+		syncRequestOSCFunc = OSCFunc({|msg, time, addr|
+			var pairs;
+			pairs = this.getPairs;
+			addr.sendMsg(*([oscPath ++ "-sync-reply"] ++ pairs));
+		}, oscPath ++ "-sync", recvPort: addrBook.me.addr.port);
+	}
+
+	getPairs { this.subclassResponsibility }
+
 	updatePeers {|key, value| this.subclassResponsibility }
 
-	free { oscFunc.free; }
+	free { oscFunc.free; syncRecOSCFunc.free; }
+
+	sync {|addr|
+		var syncAddr;
+		syncAddr = addr ?? { addrBook.citizens.detect({|cit| cit.online }).addr }; // look for the first online one
+		syncAddr.notNil.if({
+			syncRecOSCFunc = OSCFunc({|msg, time, addr|
+				var pairs;
+				pairs = msg[1..];
+				pairs.pairsDo({|key, val|
+					if(dict[key] != val, {
+						dict[key] = val;
+						this.changed(\val, key, val);
+					});
+				});
+			}, oscPath ++ "-sync-reply", syncAddr).oneShot;
+			syncAddr.sendMsg(oscPath ++ "-sync");
+		});
+	}
 }
 
 OSCDataSpace : AbstractOSCDataSpace {
@@ -96,8 +125,12 @@ OSCDataSpace : AbstractOSCDataSpace {
 		}, oscPath, recvPort: addrBook.me.addr.port);
 	}
 
+	getPairs { ^dict.getPairs }
+
 	updatePeers {|key, value| addrBook.sendExcluding(\addrBook.me.name, oscPath, key, value); }
 }
+
+// **** should this just be a more straightforward thing that issues challenges at start?
 
 // the following represents a security risk, since people could use a pseudo-object to inject undesirable code
 // a challenge test is thus used before allowing a peer to alter a value
@@ -139,6 +172,8 @@ OSCObjectSpace : AbstractOSCDataSpace {
 			}, {"OSCObjectSpace access attempt from unrecognised addr: %\n".format(addr).warn;});
 		}, oscPath, recvPort: addrBook.me.addr.port);
 	}
+
+	getPairs { ^dict.asSortedArray.collect({|pair| [pair[0], pair[1].asTextArchive]}).flat }
 
 	challengeAndWait {|key, val, addr|
 		var inds, vals, challReplyOSCFunc, cond, waitRoutine;
@@ -184,4 +219,8 @@ OSCObjectSpace : AbstractOSCDataSpace {
 
 	put {|key, value| value.checkCanArchive; super.put(key, value); } // at least this warns
 
+	sync {|addr|
+		addr = addr ?? { challDict.keys.detect({|testAddr| challDict[testAddr] }) };
+		addr.notNil.if({ super.sync(addr) });
+	}
 }
