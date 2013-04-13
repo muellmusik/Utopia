@@ -92,7 +92,7 @@ AbstractOSCDataSpace {
 
 	sync {|addr|
 		var syncAddr;
-		syncAddr = addr ?? { addrBook.citizens.detect({|cit| cit.online }).addr }; // look for the first online one
+		syncAddr = addr ?? { addrBook.citizens.reject({|cit| cit == addrBook.me }).detect({|cit| cit.online }).addr }; // look for the first online one who's not me
 		syncAddr.notNil.if({
 			syncRecOSCFunc = OSCFunc({|msg, time, addr|
 				var pairs;
