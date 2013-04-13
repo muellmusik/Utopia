@@ -145,9 +145,9 @@ OSCObjectSpace : AbstractOSCDataSpace {
 	makeOSCFunc {
 		oscFunc = OSCFunc({|msg, time, addr|
 			var key, val;
-			if(addrBook.addrs.includes(addr), {
+			if(addrBook.addrs.includesEqual(addr), {
 				key = msg[1];
-				val = msg[2].interpret;
+				val = msg[2].asString.interpret; // OSC sends Strings as Symbols
 				if(acceptEvents || val.isKindOf(Event).not, {
 					dict[key] = val;
 					this.changed(\val, key, val);
@@ -156,10 +156,10 @@ OSCObjectSpace : AbstractOSCDataSpace {
 		}, oscPath, recvPort: addrBook.me.addr.port);
 	}
 
-	getPairs { ^dict.asSortedArray.collect({|pair| [pair[0], pair[1].asTextArchive]}).flat }
+	getPairs { ^dict.asSortedArray.collect({|pair| [pair[0], pair[1].asTextArchive]}).flatten }
 
 	updatePeers {|key, value|
-		addrBook.sendExcluding(\addrBook.me.name, oscPath, key, value.asTextArchive);
+		addrBook.sendExcluding(addrBook.me.name, oscPath, key, value.asTextArchive);
 	}
 
 	put {|key, value| value.checkCanArchive; super.put(key, value); } // at least this warns
