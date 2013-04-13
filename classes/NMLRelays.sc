@@ -74,6 +74,10 @@ AbstractOSCDataSpace {
 
 	at {|key| ^dict[key] }
 
+	keys { ^dict.keys }
+
+	values { ^dict.values }
+
 	makeOSCFunc { this.subclassResponsibility }
 
 	makeSyncRequestOSCFunc {
