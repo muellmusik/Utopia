@@ -32,28 +32,48 @@ CodeRelay {
 	free { oscFunc.free; }
 }
 
-// this just adds Servers
-// need to send code as well
-// actually won't work as is, since we need a server, not a NetAddr
-// should we make a server here?
-// We can store a server in AddrBook, but that makes it slightly awkward for server subclasses
+// Do we really need this? We could do it all with an OSCObjectSpace
 SynthDefRelay {
-	var addrBook, libName;
+	var addrBook, serverObjectSpace, oscPath, libName, lib, oscFunc;
 
-	*new {|addrBook, libName = \global|
-		^super.newCopyArgs(addrBook, libName).init;
+	*new {|addrBook, serverObjectSpace, oscPath = '/synthDefRelay', libName = \global|
+		^super.newCopyArgs(addrBook, serverObjectSpace, oscPath, libName).init;
 	}
 
 	init {
-		var lib;
 		lib = SynthDescLib.getLib(libName);
-		addrBook.do({|citizen| lib.addServer(citizen.serverAddr) });
+		serverObjectSpace.values.do({|server| lib.addServer(server) });
+		serverObjectSpace.addDependant(this);
+		lib.addDependant(this);
+		this.makeOSCFunc;
+	}
+
+	makeOSCFunc {
+		oscFunc = OSCFunc({|msg, time, addr|
+			var def;
+			def = msg[1].asString.interpret;
+			this.changed(\synthDef, def);
+		}, oscPath, recvPort: addrBook.me.addr.port).fix;
 	}
 
 	free {
-		var lib;
-		lib = SynthDescLib.getLib(libName);
-		addrBook.do({|citizen| lib.removeServer(citizen.serverAddr) });
+		oscFunc.free;
+		serverObjectSpace.values.do({|server| lib.removeServer(server) });
+		serverObjectSpace.removeDependant(this);
+		lib.removeDependant(this);
+	}
+
+	update {|changed, what ...moreArgs|
+		switch(changed,
+			serverObjectSpace, { lib.addServer(moreArgs[1]) },
+			lib, { this.updateFromLib(what, *moreArgs) }
+		)
+	}
+
+	updateFromLib {|what ...moreArgs|
+		switch(what,
+			\synthDescAdded, { addrBook.sendExcluding(addrBook.me.name, oscPath, moreArgs[1].asCompileString) }
+		)
 	}
 }
 
