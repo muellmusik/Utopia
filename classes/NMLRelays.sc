@@ -138,7 +138,7 @@ OSCDataSpace : AbstractOSCDataSpace {
 OSCObjectSpace : AbstractOSCDataSpace {
 	var <>acceptEvents;
 
-	*new {|addrBook, acceptEvents = false, oscPath = '/oscDataSpace'|
+	*new {|addrBook, acceptEvents = false, oscPath = '/oscObjectSpace'|
 		^super.new.acceptEvents_(acceptEvents).init(addrBook, oscPath);
 	}
 
