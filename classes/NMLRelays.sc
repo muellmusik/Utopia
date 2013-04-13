@@ -118,10 +118,12 @@ OSCDataSpace : AbstractOSCDataSpace {
 	makeOSCFunc {
 		oscFunc = OSCFunc({|msg, time, addr|
 			var key, val;
-			key = msg[1];
-			val = msg[2];
-			dict[key] = val;
-			this.changed(\val, key, val);
+			if(addrBook.addrs.includesEqual(addr), {
+				key = msg[1];
+				val = msg[2];
+				dict[key] = val;
+				this.changed(\val, key, val);
+			}, {"OSCDataSpace access attempt from unrecognised addr: %\n".format(addr).warn;});
 		}, oscPath, recvPort: addrBook.me.addr.port);
 	}
 
