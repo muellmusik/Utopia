@@ -150,4 +150,44 @@ TestChallengeAuthenticator : UnitTest {
 	}
 }
 
+TestOSCDataSpace : UnitTest {
+	var citizen1, addrBook1, dataSpace1;
+	var citizen2, addrBook2, dataSpace2;
+
+	setUp {
+		var port2;
+		port2 = NetAddr.langPort + 1;
+		while({thisProcess.openUDPPort(port2).not}, {port2 = port2 + 1});
+		citizen1 = OSCitizen(\cit1, NetAddr.localAddr, Server.default.addr);
+		citizen2 = OSCitizen(\cit2, NetAddr.localAddr.port_(port2), Server.default.addr);
+
+		addrBook1 = AddrBook.new.addMe(citizen1).add(citizen2);
+		addrBook2 = AddrBook.new.addMe(citizen2).add(citizen1);
+	}
+
+	tearDown {
+		dataSpace1.free;
+		dataSpace2.free;
+	}
+
+	test_dataSpace {
+		var period = 1, messageReceived, receivedFrom;
+		dataSpace1 = OSCDataSpace(addrBook1);
+		dataSpace1.put(\int, 1);
+
+		1.0.wait;
+		"Testing dataSpaceSync:".postln;
+		dataSpace2 = OSCDataSpace(addrBook2);
+		dataSpace2.sync;
+
+		this.asynchAssert({dataSpace2[\int].notNil}, {dataSpace1[\int] == dataSpace2[\int]}, "dataspace sync failed", 2);
+
+		"Testing dataSpacePut:".postln;
+		dataSpace2[\float] = 2.0;
+
+		this.asynchAssert({dataSpace1[\float].notNil}, {dataSpace1[\float] == dataSpace2[\float]}, "dataspace put failed", 2);
+
+	}
+}
+
 	
