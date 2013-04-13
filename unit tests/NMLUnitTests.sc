@@ -171,7 +171,6 @@ TestOSCDataSpace : UnitTest {
 	}
 
 	test_dataSpace {
-		var period = 1, messageReceived, receivedFrom;
 		dataSpace1 = OSCDataSpace(addrBook1);
 		dataSpace1.put(\int, 1);
 
@@ -186,6 +185,48 @@ TestOSCDataSpace : UnitTest {
 		dataSpace2[\float] = 2.0;
 
 		this.asynchAssert({dataSpace1[\float].notNil}, {dataSpace1[\float] == dataSpace2[\float]}, "dataspace put failed", 2);
+
+	}
+}
+
+TestOSCObjectSpace : UnitTest {
+	var citizen1, addrBook1, objectSpace1;
+	var citizen2, addrBook2, objectSpace2;
+
+	setUp {
+		var port2;
+		port2 = NetAddr.langPort + 1;
+		while({thisProcess.openUDPPort(port2).not}, {port2 = port2 + 1});
+		citizen1 = OSCitizen(\cit1, NetAddr.localAddr, Server.default.addr);
+		citizen2 = OSCitizen(\cit2, NetAddr.localAddr.port_(port2), Server.default.addr);
+
+		addrBook1 = AddrBook.new.addMe(citizen1).add(citizen2);
+		addrBook2 = AddrBook.new.addMe(citizen2).add(citizen1);
+	}
+
+	tearDown {
+		objectSpace1.free;
+		objectSpace2.free;
+	}
+
+	test_dataSpace {
+		var testObject1, testObject2;
+		objectSpace1 = OSCObjectSpace(addrBook1);
+		testObject1 = Complex(1.0, 0.0); // we can test this easily for equality
+		objectSpace1.put(\cplx, testObject1);
+
+		1.0.wait;
+		"Testing objectSpaceSync:".postln;
+		objectSpace2 = OSCObjectSpace(addrBook2);
+		objectSpace2.sync;
+
+		this.asynchAssert({objectSpace2[\cplx].notNil}, {objectSpace1[\cplx] == objectSpace2[\cplx] == testObject1}, "objectspace sync failed", 2);
+
+		"Testing objectSpacePut:".postln;
+		testObject2 = Polar(0.5, pi);
+		objectSpace2[\polar] = testObject2;
+
+		this.asynchAssert({objectSpace1[\polar].notNil}, {objectSpace1[\polar] == objectSpace2[\polar] == testObject2}, "dataspace put failed", 2);
 
 	}
 }
