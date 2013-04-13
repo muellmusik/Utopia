@@ -115,3 +115,39 @@ TestChatter : UnitTest {
 
 	}
 }
+
+TestChallengeAuthenticator : UnitTest {
+	var citizen1, challenge1;
+	var challengeColl1, challengeColl2;
+
+	setUp {
+		citizen1 = OSCitizen(\cit1, NetAddr.localAddr, Server.default.addr);
+		challengeColl1 = Array.fill(1000, { 1.0.rand });
+		challengeColl2 = "The quick brown fox";
+	}
+
+	tearDown {
+		challenge1.free;
+	}
+
+	test_authentication {
+		var result;
+		challenge1 = ChallengeAuthenticator(challengeColl1); // this will respond to itself
+
+		"Testing challenge authentication with Array of floats as challenge:".postln;
+		challenge1.authenticate(citizen1, {result = true });
+
+		this.asynchAssert({result.notNil}, {result}, "authentication timed out", 2);
+
+		result = nil;
+		challenge1.free;
+		challenge1 = ChallengeAuthenticator(challengeColl2); // this will respond to itself
+
+		"Testing challenge authentication with String as challenge:".postln;
+		challenge1.authenticate(citizen1, {result = true });
+
+		this.asynchAssert({result.notNil}, {result}, "authentication timed out", 2);
+	}
+}
+
+	
