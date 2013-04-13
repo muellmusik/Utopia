@@ -21,6 +21,8 @@ ChallengeAuthenticator : NMLAbstractAuthenticator {
 	*new {|challenge, oscPath = '/challengeAuth'| ^super.newCopyArgs(challenge, oscPath).init; }
 
 	init {
+		// OSC sends Strings as Symbols, which is a minor pain, so convert Strings to Arrays of ASCII here
+		if(challenge.isKindOf(String), { challenge = challenge.ascii });
 		challInds = Pn(Plazy({Pshuf((0..(challenge.size - 1)), 1)}), inf).asStream;
 		this.makeOSCFunc;
 	}
@@ -28,8 +30,8 @@ ChallengeAuthenticator : NMLAbstractAuthenticator {
 	makeOSCFunc {
 		challResponseOSCFunc = OSCFunc({|msg, time, addr|
 			var inds;
-			inds = msg[1];
-			addr.sendMsg(oscPath ++ "-challenge-reply", challenge[inds]);
+			inds = msg[1..];
+			addr.sendMsg(*([oscPath ++ "-challenge-reply"] ++ challenge[inds]));
 		}, oscPath ++ "-challenge").fix;
 	}
 
@@ -43,7 +45,7 @@ ChallengeAuthenticator : NMLAbstractAuthenticator {
 
 		challReplyOSCFunc = OSCFunc({|msg, time, addr|
 			var challVals;
-			challVals = msg[1];
+			challVals = msg[1..];
 			testResult = challVals == vals;
 			if(testResult, {
 				successFunc.value;
@@ -52,7 +54,7 @@ ChallengeAuthenticator : NMLAbstractAuthenticator {
 				failureFunc.value;
 			});
 		}, oscPath ++ "-challenge-reply", citizen.addr).oneShot;
-		citizen.addr.sendMsg(oscPath ++ "-challenge", inds);
+		citizen.addr.sendMsg(*([oscPath ++ "-challenge"] ++ inds));
 
 		//timeOut
 		SystemClock.sched(timeOut, {
