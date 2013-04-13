@@ -70,11 +70,11 @@ AddrBook {
 
 // who's there?
 Attendance {
-	var <addrBook, period, oscPath, me, inOSCFunc, outOSCFunc, lastResponses;
+	var <addrBook, period, oscPath, authenticator, me, inOSCFunc, outOSCFunc, lastResponses;
 
-	*new { |addrBook, period = 1.0, me, oscPath = '/attendance'|
+	*new { |addrBook, period = 1.0, me, authenticator, oscPath = '/attendance'|
 		addrBook = addrBook ?? { AddrBook.new };
-		^super.newCopyArgs(addrBook, period, oscPath).init(me);
+		^super.newCopyArgs(addrBook, period, oscPath, authenticator).init(me);
 	}
 
 	// not totally sure about this me business...
@@ -82,6 +82,7 @@ Attendance {
 		if(argMe.notNil, {addrBook.addMe(argMe)}, { if(addrBook.me.isNil, {addrBook.addMe }) });
 		me = addrBook.me;
 		lastResponses = IdentityDictionary.new;
+		authenticator = authenticator ?? { NonAuthenticator };
 		this.makeOSCFuncs;
 		this.takeAttendance;
 	}
@@ -90,14 +91,20 @@ Attendance {
 		var replyPath;
 		replyPath = (oscPath ++ "-reply").asSymbol;
 		inOSCFunc = OSCFunc({|msg, time, addr|
-			var name, serverAddr;
+			var name, serverAddr, cit;
 			name = msg[1];
 			serverAddr = msg[2];
 			if(lastResponses[name].isNil, {
-				addrBook.add(OSCitizen(name, addr, serverAddr));
+				cit = OSCitizen(name, addr, serverAddr);
+				authenticator.authenticate(cit, {
+					addrBook.add(cit);
+					addrBook[name].online = true;
+					lastResponses[name] = time;
+				});
+			}, {
+				addrBook[name].online = true;
+				lastResponses[name] = time;
 			});
-			addrBook[name].online = true;
-			lastResponses[name] = time;
 		}, replyPath, recvPort: addrBook.me.addr.port);
 
 		outOSCFunc = OSCFunc({|msg, time, addr|
@@ -131,15 +138,16 @@ Attendance {
 
 // Centralised
 Registrar {
-	var <addrBook, period, oscPath, lastResponses, pingRegistrarOSCFunc, registerOSCFunc, unRegisterOSCFunc, pingReplyOSCFunc;
+	var <addrBook, period, authenticator, oscPath, lastResponses, pingRegistrarOSCFunc, registerOSCFunc, unRegisterOSCFunc, pingReplyOSCFunc;
 
-	*new { |addrBook, period = 1.0, oscPath = '/register'|
+	*new { |addrBook, period = 1.0, authenticator, oscPath = '/register'|
 		addrBook = addrBook ?? { AddrBook.new };
-		^super.newCopyArgs(addrBook, period, oscPath).init;
+		^super.newCopyArgs(addrBook, period, authenticator, oscPath).init;
 	}
 
 	init {
 		lastResponses = IdentityDictionary.new;
+		authenticator = authenticator ?? { NonAuthenticator };
 		this.makeOSCFuncs;
 		period.notNil.if({ this.ping; });
 	}
@@ -157,13 +165,15 @@ Registrar {
 		registerOSCFunc = OSCFunc({|msg, time, addr|
 			var citizen;
 			citizen = this.makeCitizen(*([addr] ++ msg[1..]));
-			// tell everyone about the new arrival
-			addrBook.sendAll(oscPath ++ "-add", citizen.name, addr.ip, addr.port, citizen.serverAddr.hostname, citizen.serverAddr.port);
-			// tell the new arrival about everyone
-			addrBook.citizens.do({|cit|
-				addr.sendMsg(oscPath ++ "-add", cit.name, cit.addr.ip, cit.addr.port, cit.serverAddr.hostname, cit.serverAddr.port);
+			authenticator.authenticate(citizen, {
+				// tell everyone about the new arrival
+				addrBook.sendAll(oscPath ++ "-add", citizen.name, addr.ip, addr.port, citizen.serverAddr.hostname, citizen.serverAddr.port);
+				// tell the new arrival about everyone
+				addrBook.citizens.do({|cit|
+					addr.sendMsg(oscPath ++ "-add", cit.name, cit.addr.ip, cit.addr.port, cit.serverAddr.hostname, cit.serverAddr.port);
+				});
+				addrBook.add(citizen);
 			});
-			addrBook.add(citizen);
 		}, oscPath);
 
 		unRegisterOSCFunc = OSCFunc({|msg, time, addr|
@@ -212,11 +222,12 @@ Registrar {
 }
 
 Registrant {
-	var <addrBook, registrarAddr, oscPath, me, addOSCFunc, removeOSCFunc, onlineOSCFunc, pingOSCFunc, pinging;
+	var <addrBook, registrarAddr, authenticator, oscPath, me, addOSCFunc, removeOSCFunc, onlineOSCFunc, pingOSCFunc, pinging;
 
-	*new { |addrBook, me, registrarAddr, oscPath = '/register'|
+	// we pass an authenticator here but maybe it's unnecessary. It's simply there to respond, not challenge in this case.
+	*new { |addrBook, me, registrarAddr, authenticator, oscPath = '/register'|
 		addrBook = addrBook ?? { AddrBook.new };
-		^super.newCopyArgs(addrBook, registrarAddr, oscPath).init(me);
+		^super.newCopyArgs(addrBook, registrarAddr, authenticator, oscPath).init(me);
 	}
 
 	// not totally sure about this me business...
