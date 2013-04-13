@@ -1,29 +1,29 @@
-// uses dependancy to update interested parties
-// do we need the serverAddr, or could this be handled via a separate object/addrBook?
-// nice thing about ServerAddr is it could actually be on another machine
-OSCitizen {
-	var <name, <addr, <serverAddr, <online;
+// not sure about addMe business...
+// registrar uses loopback option immediately so address changes once registered; does this matter
+// might be nice if addition to the AddrBook only took place once registered
 
-	*new {|name, addr, serverAddr, online = true|
-		^super.newCopyArgs(name.asSymbol, addr, serverAddr, online);
+// uses dependancy to update interested parties
+OSCitizen {
+	var <name, <addr, <online;
+
+	*new {|name, addr, online = true|
+		^super.newCopyArgs(name.asSymbol, addr, online);
 	}
 
 	online_ {|bool| if(bool != online, { online = bool; this.changed(\online) }) }
 
 	== {|other|
 		var result;
-		result = (name == other.name) && (addr == other.addr) && (serverAddr == other.serverAddr) && (online == other.online);
+		result = (name == other.name) && (addr == other.addr) && (online == other.online);
 		^result;
 	}
 
 	// post pretty
 	printOn { |stream|
-		stream << this.class.name << "(" <<* [name, addr, serverAddr, online] << ")"
+		stream << this.class.name << "(" <<* [name, addr, online] << ")"
 	}
 }
 
-// can we make this so that if there is no me we have a centralised system?
-// or everything via OSC, so that there's no distinction?
 AddrBook {
 	var dict, <me;
 
@@ -46,7 +46,7 @@ AddrBook {
 			var name;
 			name = "whoami".unixCmdGetStdOut;
 			if(name.last == Char.nl, {name = name.drop(-1)});
-			OSCitizen(name, NetAddr.localAddr, Server.default.addr)};
+			OSCitizen(name, NetAddr.localAddr)};
 		this.add(meCitizen);
 		me = meCitizen;
 	}
@@ -64,8 +64,6 @@ AddrBook {
 	addrs { ^dict.values.collect({|citizen| citizen.addr }) }
 
 	citizens { ^dict.values }
-
-	serverAddrs { ^dict.values.collect({|citizen| citizen.serverAddr }) }
 }
 
 // who's there?
@@ -91,11 +89,10 @@ Attendance {
 		var replyPath;
 		replyPath = (oscPath ++ "-reply").asSymbol;
 		inOSCFunc = OSCFunc({|msg, time, addr|
-			var name, serverAddr, cit;
+			var name, cit;
 			name = msg[1];
-			serverAddr = msg[2];
 			if(lastResponses[name].isNil, {
-				cit = OSCitizen(name, addr, serverAddr);
+				cit = OSCitizen(name, addr);
 				authenticator.authenticate(cit, {
 					addrBook.add(cit);
 					addrBook[name].online = true;
@@ -108,7 +105,7 @@ Attendance {
 		}, replyPath, recvPort: addrBook.me.addr.port);
 
 		outOSCFunc = OSCFunc({|msg, time, addr|
-			addr.sendMsg(replyPath, me.name, me.serverAddr);
+			addr.sendMsg(replyPath, me.name);
 		}, oscPath, recvPort: addrBook.me.addr.port);
 	}
 
@@ -152,8 +149,8 @@ Registrar {
 		period.notNil.if({ this.ping; });
 	}
 
-	makeCitizen {|addr, name, serverIP, serverPort|
-		^OSCitizen(name, addr, NetAddr(serverIP.asString, serverPort));
+	makeCitizen {|addr, name|
+		^OSCitizen(name, addr);
 	}
 
 	makeOSCFuncs {
@@ -164,13 +161,13 @@ Registrar {
 
 		registerOSCFunc = OSCFunc({|msg, time, addr|
 			var citizen;
-			citizen = this.makeCitizen(*([addr] ++ msg[1..]));
+			citizen = this.makeCitizen(addr, msg[1]);
 			authenticator.authenticate(citizen, {
 				// tell everyone about the new arrival
-				addrBook.sendAll(oscPath ++ "-add", citizen.name, addr.ip, addr.port, citizen.serverAddr.hostname, citizen.serverAddr.port);
+				addrBook.sendAll(oscPath ++ "-add", citizen.name, addr.ip, addr.port);
 				// tell the new arrival about everyone
 				addrBook.citizens.do({|cit|
-					addr.sendMsg(oscPath ++ "-add", cit.name, cit.addr.ip, cit.addr.port, cit.serverAddr.hostname, cit.serverAddr.port);
+					addr.sendMsg(oscPath ++ "-add", cit.name, cit.addr.ip, cit.addr.port);
 				});
 				addrBook.add(citizen);
 			});
@@ -238,8 +235,8 @@ Registrant {
 		if(registrarAddr.isNil, { this.pingRegistrar }, { this.register });
 	}
 
-	makeCitizen {|name, hostname, port, serverHostname, serverPort|
-		^OSCitizen(name, NetAddr(hostname.asString, port), NetAddr(serverHostname.asString, serverPort));
+	makeCitizen {|name, hostname, port|
+		^OSCitizen(name, NetAddr(hostname.asString, port));
 	}
 
 	addOSCFuncs {
@@ -270,7 +267,7 @@ Registrant {
 	free { pinging = false; this.unregister; addOSCFunc.free; removeOSCFunc.free; onlineOSCFunc.free; pingOSCFunc.free; }
 
 	register {
-		registrarAddr.sendMsg(oscPath, me.name, me.serverAddr.hostname, me.serverAddr.port);
+		registrarAddr.sendMsg(oscPath, me.name);
 	}
 
 	unregister {
