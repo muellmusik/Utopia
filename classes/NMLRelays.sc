@@ -127,7 +127,7 @@ OSCDataSpace : AbstractOSCDataSpace {
 
 	getPairs { ^dict.getPairs }
 
-	updatePeers {|key, value| addrBook.sendExcluding(\addrBook.me.name, oscPath, key, value); }
+	updatePeers {|key, value| addrBook.sendExcluding(addrBook.me.name, oscPath, key, value); }
 }
 
 // the following represents a security risk, since people could use a pseudo-object to inject undesirable code
