@@ -2,6 +2,7 @@
 
 These examples are designed to run on one machine, but simulate the effect of running on two
 Hopefully it is clear which code would run on each
+Some functionality cannot be demonstrated this way
 
 */
 
@@ -67,6 +68,21 @@ Hopefully it is clear which code would run on each
 
 
 ////////////////////////
+// Using Authenticators
+
+// We'll use ChallengeAuthenticator, which does a simple unencrypted Challenge response test before allowing someone to join
+// You could make more sophisticated authenticators if desired
+
+// Here's a challenge. Better in real life to use a long collection, like the text of War and Peace ;-)
+// Both peers know this, but it's never sent in its entirety over the network
+~challenge = "The quick brown fox jumped over the lazy dog";
+
+// We can't really test this on one machine, since a single instance both issues and answers challengers, but it would look like this:
+// ~registrar = Registrar(authenticator: ChallengeAuthenticator(~challenge));
+// ~registrant1 = Registrant(authenticator: ChallengeAuthenticator(~challenge));
+
+
+////////////////////////
 // Chatter, one of a number of classes which relay data to members of an AddrBook
 
 // make some citizens and address books
@@ -101,6 +117,51 @@ thisProcess.openUDPPort(3000);
 
 // cleanup
 ~chatter1.free; ~chatter2.free;
+
+
+
+////////////////////////
+// Code Relay
+
+// make some citizens and address books
+(
+thisProcess.openUDPPort(3000);
+~cit1 = OSCitizen(\me1, NetAddr.localAddr);
+~cit2 = OSCitizen(\me2, NetAddr("127.0.0.1", 3000)); // I'll use a different port and simulate a different machine
+~addrBook1 = AddrBook().addMe(~cit1);
+~addrBook2 = AddrBook().addMe(~cit2);
+~addrBook1.add(~cit2);
+~addrBook2.add(~cit1);
+)
+
+// only one posts code when received
+// and we'll pass a no-op codeDumpFunc to avoid duplicates sends since we're on one machine
+~codeRelay2 = CodeRelay(~addrBook2, true, codeDumpFunc: {});
+~codeRelay1 = CodeRelay(~addrBook1);
+
+
+//some dumb code to execute
+\foo.postln;
+1 + 1;
+
+// make a GUI for cit1
+(
+~win = Window("Codey Larry").front;
+~win.layout = VLayout(~textView = TextView());
+// to get updates, just add a dependant
+// you could update History here for example
+~codeRelay2.addDependant({|chatter, what, who, code|
+	{ ~textView.string_(who ++ ":\n" ++ code ++ "\n\n" ++ ~textView.string) }.defer;
+});
+)
+
+//some more dumb code to execute
+\bar.postln;
+1 + 1;
+
+// cleanup
+~codeRelay1.free; ~codeRelay2.free;
+
 
 
 ////////////////////////
