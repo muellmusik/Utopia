@@ -114,7 +114,7 @@ Attendance {
 	takeAttendance {
 		var broadcastAddr;
 		NetAddr.broadcastFlag = true;
-		broadcastAddr = NetAddrMP("255.255.255.255", 57120 + (0..7));
+		broadcastAddr = NMLNetAddrMP("255.255.255.255", 57120 + (0..7));
 		SystemClock.sched(0, {
 			broadcastAddr.sendMsg(oscPath);
 			if(period.notNil, { this.checkOnline; });
@@ -279,7 +279,7 @@ Registrant {
 		var broadcastAddr, registrarPingOSCFunc;
 		pinging = true;
 		NetAddr.broadcastFlag = true;
-		broadcastAddr = NetAddrMP("255.255.255.255", 57120 + (0..7));
+		broadcastAddr = NMLNetAddrMP("255.255.255.255", 57120 + (0..7));
 		registrarPingOSCFunc = OSCFunc({|msg, time, addr|
 			pinging = false;
 			registrarAddr = addr;
@@ -295,3 +295,37 @@ Registrant {
 	}
 
 }
+
+// implements a NetAddr that can have multiple ports...
+// this is the same as in Republic, but we duplicate here for now in order to avoid the dependancy
+NMLNetAddrMP : NetAddr {
+
+	var <>ports;
+
+	*new { arg hostname, ports;
+		ports = ports.asArray;
+		^super.new(hostname, ports.first).ports_(ports)
+	}
+
+	sendRaw{ arg rawArray;
+		ports.do{ |it|
+			this.port_( it );
+			^super.sendRaw( rawArray );
+		}
+	}
+
+	sendMsg { arg ... args;
+		ports.do{ |it|
+			this.port_( it );
+			super.sendMsg( *args );
+		}
+	}
+
+	sendBundle { arg time ... args;
+		ports.do{ |it|
+			this.port_( it );
+			super.sendBundle( *([time]++args) );
+		}
+	}
+}
+
