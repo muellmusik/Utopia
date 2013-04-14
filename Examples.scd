@@ -1,3 +1,10 @@
+/*
+
+These examples are designed to run on one machine, but simulate the effect of running on two
+Hopefully it is clear which code would run on each
+
+*/
+
 ////////////////////////
 // decentralised discovery of participants
 // find who's on the network
@@ -13,7 +20,7 @@
 	}, Array)}.defer;
 });
 
-~addrBook.addMe;
+~addrBook.addMe; // will automatically add you using your user name
 
 ~attendance = Attendance(~addrBook);
 )
