@@ -33,46 +33,39 @@ CodeRelay {
 }
 
 // Do we really need this? We could do it all with an OSCObjectSpace
-SynthDefRelay {
-	var addrBook, serverObjectSpace, oscPath, libName, lib, oscFunc;
+SynthDescRelay {
+	var addrBook, oscPath, libName, lib, oscFunc;
 
-	*new {|addrBook, serverObjectSpace, oscPath = '/synthDefRelay', libName = \global|
-		^super.newCopyArgs(addrBook, serverObjectSpace, oscPath, libName).init;
+	*new {|addrBook, oscPath = '/synthDefRelay', libName = \global|
+		^super.newCopyArgs(addrBook, oscPath, libName).init;
 	}
 
 	init {
 		lib = SynthDescLib.getLib(libName);
-		serverObjectSpace.values.do({|server| lib.addServer(server) });
-		serverObjectSpace.addDependant(this);
 		lib.addDependant(this);
 		this.makeOSCFunc;
 	}
 
 	makeOSCFunc {
 		oscFunc = OSCFunc({|msg, time, addr|
-			var def;
-			def = msg[1].asString.interpret;
-			this.changed(\synthDef, def);
+			var desc;
+			desc = msg[1].asString.interpret;
+			this.changed(\synthDesc, desc);
 		}, oscPath, recvPort: addrBook.me.addr.port).fix;
 	}
 
 	free {
 		oscFunc.free;
-		serverObjectSpace.values.do({|server| lib.removeServer(server) });
-		serverObjectSpace.removeDependant(this);
 		lib.removeDependant(this);
 	}
 
 	update {|changed, what ...moreArgs|
-		switch(changed,
-			serverObjectSpace, { lib.addServer(moreArgs[1]) },
-			lib, { this.updateFromLib(what, *moreArgs) }
-		)
+		this.updateFromLib(what, *moreArgs);
 	}
 
 	updateFromLib {|what ...moreArgs|
 		switch(what,
-			\synthDescAdded, { addrBook.sendExcluding(addrBook.me.name, oscPath, moreArgs[1].asCompileString) }
+			\synthDescAdded, { addrBook.sendExcluding(addrBook.me.name, oscPath, moreArgs[1].asTextArchive) }
 		)
 	}
 }
