@@ -35,6 +35,7 @@ CodeRelay {
 // Do we really need this? We could do it all with an OSCObjectSpace
 SynthDescRelay {
 	var addrBook, oscPath, libName, lib, oscFunc;
+	var justAddedRemote = false;
 
 	*new {|addrBook, oscPath = '/synthDefRelay', libName = \global|
 		^super.newCopyArgs(addrBook, oscPath, libName).init;
@@ -50,6 +51,8 @@ SynthDescRelay {
 		oscFunc = OSCFunc({|msg, time, addr|
 			var desc;
 			desc = msg[1].asString.interpret;
+			justAddedRemote = true;
+			lib.add(desc);
 			this.changed(\synthDesc, desc);
 		}, oscPath, recvPort: addrBook.me.addr.port).fix;
 	}
@@ -65,7 +68,12 @@ SynthDescRelay {
 
 	updateFromLib {|what ...moreArgs|
 		switch(what,
-			\synthDescAdded, { addrBook.sendExcluding(addrBook.me.name, oscPath, moreArgs[0].asTextArchive) }
+			\synthDescAdded, {
+				// If we've just received one from somebody else, don't let that trigger another send and a never ending loop
+				if(justAddedRemote.not, {
+					addrBook.sendExcluding(addrBook.me.name, oscPath, moreArgs[0].asTextArchive);
+				}, { justAddedRemote = false });
+			}
 		)
 	}
 }
