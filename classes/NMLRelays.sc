@@ -65,7 +65,7 @@ SynthDescRelay {
 
 	updateFromLib {|what ...moreArgs|
 		switch(what,
-			\synthDescAdded, { addrBook.sendExcluding(addrBook.me.name, oscPath, moreArgs[1].asTextArchive) }
+			\synthDescAdded, { addrBook.sendExcluding(addrBook.me.name, oscPath, moreArgs[0].asTextArchive) }
 		)
 	}
 }
