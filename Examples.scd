@@ -65,8 +65,8 @@
 // make some citizens and address books
 (
 thisProcess.openUDPPort(3000);
-~cit1 = OSCitizen(\me1, NetAddr.localAddr, s.addr);
-~cit2 = OSCitizen(\me2, NetAddr("127.0.0.1", 3000), s.addr); // I'll use a different port and simulate a different machine
+~cit1 = OSCitizen(\me1, NetAddr.localAddr);
+~cit2 = OSCitizen(\me2, NetAddr("127.0.0.1", 3000)); // I'll use a different port and simulate a different machine
 ~addrBook1 = AddrBook().addMe(~cit1);
 ~addrBook2 = AddrBook().addMe(~cit2);
 ~addrBook1.add(~cit2);
@@ -103,7 +103,7 @@ thisProcess.openUDPPort(3000);
 
 // make a citizen and an address book
 (
-~cit1 = OSCitizen(\me1, NetAddr.localAddr, s.addr);
+~cit1 = OSCitizen(\me1, NetAddr.localAddr);
 ~addrBook = AddrBook();
 ~addrBook.add(~cit1);
 )
