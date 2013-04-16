@@ -37,7 +37,6 @@ ChallengeAuthenticator : NMLAbstractAuthenticator {
 
 	free { challResponseOSCFunc.free; }
 
-	// should there be a timeout?
 	authenticate {|citizen, successFunc, failureFunc|
 		var inds, vals, challReplyOSCFunc, testResult = false;
 
@@ -71,5 +70,60 @@ ChallengeAuthenticator : NMLAbstractAuthenticator {
 		inds = challInds.nextN(3);
 		vals = challenge[inds];
 		^[inds, vals];
+	}
+}
+
+// Group Password authenticator
+// All peers use the same password
+// You need the password to decrypt challenge responses, so this should be bidirectionally secure
+// i.e. you can't read someones password response, unless you know the password
+GroupPasswordAuthenticator : NMLAbstractAuthenticator {
+	classvar <>timeOut = 5;
+	var password, oscPath, encryptor, oscFunc;
+
+	*new {|password, oscPath = '/passwordAuth', encryptor| ^super.newCopyArgs(password, oscPath, encryptor).init; }
+
+	init {
+		// passwords should not be sent plaintext, so by default we use this with the same password
+		encryptor = encryptor ?? { OpenSSLSymEncryptor(password)};
+		this.makeOSCFunc;
+	}
+
+	makeOSCFunc {
+		oscFunc = OSCFunc({|msg, time, addr|
+			var encrypted;
+			encrypted = encryptor.encryptText(password);
+			addr.sendMsg(oscPath ++ "-challenge-reply", encrypted);
+		}, oscPath ++ "-challenge").fix;
+	}
+
+	free { oscFunc.free; }
+
+	authenticate {|citizen, successFunc, failureFunc|
+		var challReplyOSCFunc, testResult = false;
+
+		challReplyOSCFunc = OSCFunc({|msg, time, addr|
+			var encrypted, decrypted;
+			encrypted = msg[1].asString;
+			decrypted = encryptor.decryptText(encrypted);
+			testResult = decrypted == password;
+
+			if(testResult, {
+				successFunc.value;
+			}, {
+				"GroupPasswordAuthenticator challenge failed! Citizen: %\n".format(citizen).warn;
+				failureFunc.value;
+			});
+		}, oscPath ++ "-challenge-reply", citizen.addr).oneShot;
+		citizen.addr.sendMsg(oscPath ++ "-challenge");
+
+		//timeOut
+		SystemClock.sched(timeOut, {
+			if(testResult.not, {
+				challReplyOSCFunc.free;
+				"GroupPasswordAuthenticator challenge timed out! Citizen: %\n".format(citizen).warn;
+				failureFunc.value;
+			});
+		});
 	}
 }
