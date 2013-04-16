@@ -68,18 +68,37 @@ Some functionality cannot be demonstrated this way
 
 
 ////////////////////////
-// Using Authenticators
+// Security: Using Authenticators and Encryption
 
 // We'll use ChallengeAuthenticator, which does a simple unencrypted Challenge response test before allowing someone to join
 // You could make more sophisticated authenticators if desired
 
 // Here's a challenge. Better in real life to use a long collection, like the text of War and Peace ;-)
 // Both peers know this, but it's never sent in its entirety over the network
+
 ~challenge = "The quick brown fox jumped over the lazy dog";
 
 // We can't really test this on one machine, since a single instance both issues and answers challengers, but it would look like this:
 // ~registrar = Registrar(authenticator: ChallengeAuthenticator(~challenge));
 // ~registrant1 = Registrant(authenticator: ChallengeAuthenticator(~challenge));
+
+// Another example is GroupPasswordAuthenticator, which uses a symmetric password to allow peers to join
+// ~registrar = Registrar(authenticator: GroupPasswordAuthenticator("foobar"));
+// ~registrant1 = Registrant(authenticator: GroupPasswordAuthenticator("foobar"));
+
+// GroupPasswordAuthenticator uses encryption by default so that passwords are not sent in plaintext. By default this uses OpenSSLSymEncryptor
+// which does symmetric key encryption of text. (Requires OpenSSL installed and in your path!)
+
+e = OpenSSLSymEncryptor("password", "bf"); // impossible to guess password, use blowfish encryption
+
+a = e.encryptText("Test")
+
+e.decryptText(a); // should say test
+
+// When used with encryption GroupPasswordAuthenticator should be safe even in decentralised registration, since observers cannot
+// decrypt the responses to password challenges without the password (or alternatively an additional one).
+
+
 
 
 ////////////////////////
