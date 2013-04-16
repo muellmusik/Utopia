@@ -25,6 +25,9 @@ OpenSSLSymEncryptor : NMLAbstractEncryptor {
 	}
 
 	decryptText { |text|
-		^"% enc -d -% -a -pass pass:% <<< %".format(cmdPath, cipher ? defaultCipher, password, text).unixCmdGetStdOut;
+		var decrypt;
+		decrypt = "% enc -d -% -a -pass pass:% <<< %".format(cmdPath, cipher ? defaultCipher, password, text).unixCmdGetStdOut;
+		// openssl adds a trailing newline for some reason
+		^decrypt.drop(-1);
 	}
 }
