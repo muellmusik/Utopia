@@ -38,7 +38,7 @@ ChallengeAuthenticator : NMLAbstractAuthenticator {
 	free { challResponseOSCFunc.free; }
 
 	authenticate {|citizen, successFunc, failureFunc|
-		var inds, vals, challReplyOSCFunc, testResult = false;
+		var inds, vals, challReplyOSCFunc, testResult;
 
 		#inds, vals = this.generateChallenge;
 
@@ -50,6 +50,7 @@ ChallengeAuthenticator : NMLAbstractAuthenticator {
 				successFunc.value;
 			}, {
 				"ChallengeAuthenticator challenge failed! Citizen: %\n".format(citizen).warn;
+				testResult = false;
 				failureFunc.value;
 			});
 		}, oscPath ++ "-challenge-reply", citizen.addr).oneShot;
@@ -57,7 +58,7 @@ ChallengeAuthenticator : NMLAbstractAuthenticator {
 
 		//timeOut
 		SystemClock.sched(timeOut, {
-			if(testResult.not, {
+			if(testResult.isNil, {
 				challReplyOSCFunc.free;
 				"ChallengeAuthenticator challenge timed out! Citizen: %\n".format(citizen).warn;
 				failureFunc.value;
@@ -100,7 +101,7 @@ GroupPasswordAuthenticator : NMLAbstractAuthenticator {
 	free { oscFunc.free; }
 
 	authenticate {|citizen, successFunc, failureFunc|
-		var challReplyOSCFunc, testResult = false;
+		var challReplyOSCFunc, testResult;
 
 		challReplyOSCFunc = OSCFunc({|msg, time, addr|
 			var encrypted, decrypted;
@@ -112,6 +113,7 @@ GroupPasswordAuthenticator : NMLAbstractAuthenticator {
 				successFunc.value;
 			}, {
 				"GroupPasswordAuthenticator challenge failed! Citizen: %\n".format(citizen).warn;
+				testResult = false;
 				failureFunc.value;
 			});
 		}, oscPath ++ "-challenge-reply", citizen.addr).oneShot;
@@ -119,7 +121,7 @@ GroupPasswordAuthenticator : NMLAbstractAuthenticator {
 
 		//timeOut
 		SystemClock.sched(timeOut, {
-			if(testResult.not, {
+			if(testResult.isNil, {
 				challReplyOSCFunc.free;
 				"GroupPasswordAuthenticator challenge timed out! Citizen: %\n".format(citizen).warn;
 				failureFunc.value;
