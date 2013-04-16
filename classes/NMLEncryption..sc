@@ -4,6 +4,10 @@ NMLAbstractEncryptor {
 	encryptText { |text| ^this.subclassResponsibility }
 
 	decryptText { |text| ^this.subclassResponsibility }
+
+	encryptBytes { |int8array| ^this.subclassResponsibility }
+
+	decryptBytes { |encryptedText| ^this.subclassResponsibility }
 }
 
 NonEncryptor : NMLAbstractEncryptor {
@@ -29,5 +33,27 @@ OpenSSLSymEncryptor : NMLAbstractEncryptor {
 		decrypt = "% enc -d -% -a -pass pass:% <<< %".format(cmdPath, cipher ? defaultCipher, password, text).unixCmdGetStdOut;
 		// openssl adds a trailing newline for some reason
 		^decrypt.drop(-1);
+	}
+
+	encryptBytes { |int8array|
+		var path, pipe, file, encrypted;
+		path = Platform.defaultTempDir ++ "tmptext";
+		pipe = Pipe("% enc -% -a -salt -pass pass:% -out %".format(cmdPath, cipher ? defaultCipher, password, path), "w");
+		pipe.write(int8array);
+		pipe.close;
+		file = File(path, "r");
+		encrypted = file.readAllString;
+		file.close;
+		//"rm %".format(path).unixCmd;
+		^encrypted;
+	}
+
+	decryptBytes { |encryptedText|
+		var pipe, decrypt, byte;
+		pipe = Pipe("% enc -d -% -a -pass pass:% <<< %".format(cmdPath, cipher ? defaultCipher, password, encryptedText), "r");
+		decrypt = Int8Array.new;
+		while { byte = pipe.getInt8; byte.notNil } { decrypt = decrypt.add(byte) };
+		pipe.close;
+		^decrypt;
 	}
 }
