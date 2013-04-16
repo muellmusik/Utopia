@@ -28,7 +28,7 @@ CodeRelay {
 					Char.nl.post;
 				});
 			}, {"CodeRelay access attempt from unrecognised addr: %\n".format(addr).warn;});
-		}, oscPath, recvPort: addrBook.me.addr.port);
+		}, oscPath, recvPort: addrBook.me.addr.port).fix;
 	}
 
 	free { oscFunc.free; }
@@ -110,7 +110,7 @@ AbstractOSCDataSpace {
 			var pairs;
 			pairs = this.getPairs;
 			addr.sendMsg(*([oscPath ++ "-sync-reply"] ++ pairs));
-		}, oscPath ++ "-sync", recvPort: addrBook.me.addr.port);
+		}, oscPath ++ "-sync", recvPort: addrBook.me.addr.port).fix;
 	}
 
 	getPairs { this.subclassResponsibility }
@@ -153,7 +153,7 @@ OSCDataSpace : AbstractOSCDataSpace {
 				dict[key] = val;
 				this.changed(\val, key, val);
 			}, {"OSCDataSpace access attempt from unrecognised addr: %\n".format(addr).warn;});
-		}, oscPath, recvPort: addrBook.me.addr.port);
+		}, oscPath, recvPort: addrBook.me.addr.port).fix;
 	}
 
 	getPairs { ^dict.getPairs }
@@ -182,7 +182,7 @@ OSCObjectSpace : AbstractOSCDataSpace {
 					this.changed(\val, key, val);
 				}, { "OSCObjectSpace rejected event % from addr: %\n".format(val, addr).warn; });
 			}, {"OSCObjectSpace access attempt from unrecognised addr: %\n".format(addr).warn;});
-		}, oscPath, recvPort: addrBook.me.addr.port);
+		}, oscPath, recvPort: addrBook.me.addr.port).fix;
 	}
 
 	getPairs { ^dict.asSortedArray.collect({|pair| [pair[0], pair[1].asTextArchive]}).flatten }

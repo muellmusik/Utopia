@@ -102,11 +102,11 @@ Attendance {
 				addrBook[name].online = true;
 				lastResponses[name] = time;
 			});
-		}, replyPath, recvPort: addrBook.me.addr.port);
+		}, replyPath, recvPort: addrBook.me.addr.port).fix;
 
 		outOSCFunc = OSCFunc({|msg, time, addr|
 			addr.sendMsg(replyPath, me.name);
-		}, oscPath, recvPort: addrBook.me.addr.port);
+		}, oscPath, recvPort: addrBook.me.addr.port).fix;
 	}
 
 	free { inOSCFunc.free; outOSCFunc.free; }
@@ -157,7 +157,7 @@ Registrar {
 		// people are looking for me
 		pingRegistrarOSCFunc = OSCFunc({|msg, time, addr|
 			addr.sendMsg(oscPath ++ "-pingRegistrarReply"); // I'm here!
-		}, oscPath ++ "-pingRegistrar");
+		}, oscPath ++ "-pingRegistrar").fix;
 
 		registerOSCFunc = OSCFunc({|msg, time, addr|
 			var citizen;
@@ -171,7 +171,7 @@ Registrar {
 				});
 				addrBook.add(citizen);
 			});
-		}, oscPath);
+		}, oscPath).fix;
 
 		unRegisterOSCFunc = OSCFunc({|msg, time, addr|
 			var name;
@@ -179,7 +179,7 @@ Registrar {
 			addrBook.removeAt(name);
 			lastResponses[name] = nil;
 			addrBook.sendExcluding(name, oscPath ++ "-remove", name);
-		}, oscPath ++ "-unregister");
+		}, oscPath ++ "-unregister").fix;
 
 		// make sure everyone is still online
 		pingReplyOSCFunc = OSCFunc({|msg, time, addr|
@@ -191,7 +191,7 @@ Registrar {
 				lastResponses[name] = time;
 				addrBook.sendAll(oscPath ++ "-online", name, true.binaryValue);
 			});
-		}, oscPath ++ "-pingReply");
+		}, oscPath ++ "-pingReply").fix;
 	}
 
 	free { pingRegistrarOSCFunc.free; registerOSCFunc.free; unRegisterOSCFunc.free; pingReplyOSCFunc.free }
@@ -244,24 +244,24 @@ Registrant {
 			var citizen;
 			citizen = this.makeCitizen(*msg[1..]);
 			addrBook.add(citizen);
-		}, oscPath ++ "-add", registrarAddr, recvPort: addrBook.me.addr.port);
+		}, oscPath ++ "-add", registrarAddr, recvPort: addrBook.me.addr.port).fix;
 
 		removeOSCFunc = OSCFunc({|msg, time, addr|
 			var name;
 			name = msg[1];
 			addrBook.removeAt(name);
-		}, oscPath ++ "-remove", registrarAddr, recvPort: addrBook.me.addr.port);
+		}, oscPath ++ "-remove", registrarAddr, recvPort: addrBook.me.addr.port).fix;
 
 		onlineOSCFunc = OSCFunc({|msg, time, addr|
 			var name, citizen;
 			name = msg[1];
 			citizen = addrBook[name];
 			citizen.notNil.if({ citizen.online_(msg[2].booleanValue) });
-		}, oscPath ++ "-online", registrarAddr, recvPort: addrBook.me.addr.port);
+		}, oscPath ++ "-online", registrarAddr, recvPort: addrBook.me.addr.port).fix;
 
 		pingOSCFunc = OSCFunc({|msg, time, addr|
 			registrarAddr.sendMsg(oscPath ++ "-pingReply", me.name);
-		}, oscPath ++ "-ping", registrarAddr, recvPort: addrBook.me.addr.port);
+		}, oscPath ++ "-ping", registrarAddr, recvPort: addrBook.me.addr.port).fix;
 	}
 
 	free { pinging = false; this.unregister; addOSCFunc.free; removeOSCFunc.free; onlineOSCFunc.free; pingOSCFunc.free; }

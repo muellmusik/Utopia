@@ -17,7 +17,7 @@ Chatter {
 			if(post, {
 				(name.asString ++ ": " ++ chat).postln;
 			});
-		}, oscPath, recvPort: addrBook.me.addr.port);
+		}, oscPath, recvPort: addrBook.me.addr.port).fix;
 	}
 
 	free { oscFunc.free; }
