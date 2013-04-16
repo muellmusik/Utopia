@@ -14,7 +14,7 @@ NonEncryptor : NMLAbstractEncryptor {
 }
 
 // requires OpenSSL in your path
-OpenSSLEncryptor : NMLAbstractEncryptor {
+OpenSSLSymEncryptor : NMLAbstractEncryptor {
 	classvar <>defaultCipher = "aes-128-cbc", <>cmdPath = "openssl";
 	var cipher;
 
