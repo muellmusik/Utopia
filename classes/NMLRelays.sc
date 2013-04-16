@@ -19,13 +19,15 @@ CodeRelay {
 	makeOSCFunc {
 		oscFunc = OSCFunc({|msg, time, addr|
 			var name, code;
-			name = msg[1];
-			code = msg[2];
-			this.changed(\code, name, code);
-			if(post, {
-				(name.asString ++ ":\n" ++ code).postln;
-				Char.nl.post;
-			});
+			if(addrBook.addrs.includesEqual(addr), {
+				name = msg[1];
+				code = msg[2];
+				this.changed(\code, name, code);
+				if(post, {
+					(name.asString ++ ":\n" ++ code).postln;
+					Char.nl.post;
+				});
+			}, {"CodeRelay access attempt from unrecognised addr: %\n".format(addr).warn;});
 		}, oscPath, recvPort: addrBook.me.addr.port);
 	}
 
@@ -50,10 +52,12 @@ SynthDescRelay {
 	makeOSCFunc {
 		oscFunc = OSCFunc({|msg, time, addr|
 			var desc;
-			desc = msg[1].asString.interpret;
-			justAddedRemote = true;
-			lib.add(desc);
-			this.changed(\synthDesc, desc);
+			if(addrBook.addrs.includesEqual(addr), {
+				desc = msg[1].asString.interpret;
+				justAddedRemote = true;
+				lib.add(desc);
+				this.changed(\synthDesc, desc);
+			}, {"SynthDescRelay access attempt from unrecognised addr: %\n".format(addr).warn;});
 		}, oscPath, recvPort: addrBook.me.addr.port).fix;
 	}
 
