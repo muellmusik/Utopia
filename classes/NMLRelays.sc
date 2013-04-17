@@ -134,23 +134,7 @@ AbstractOSCDataSpace {
 
 	free { oscFunc.free; syncRecOSCFunc.free; }
 
-	sync {|addr|
-		var syncAddr;
-		syncAddr = addr ?? { addrBook.citizens.reject({|cit| cit == addrBook.me }).detect({|cit| cit.online }).addr }; // look for the first online one who's not me
-		syncAddr.notNil.if({
-			syncRecOSCFunc = OSCFunc({|msg, time, addr|
-				var pairs;
-				pairs = msg[1..];
-				pairs.pairsDo({|key, val|
-					if(dict[key] != val, {
-						dict[key] = val;
-						this.changed(\val, key, val);
-					});
-				});
-			}, oscPath ++ "-sync-reply", syncAddr).oneShot;
-			syncAddr.sendMsg(oscPath ++ "-sync");
-		});
-	}
+	sync {|addr| this.subclassResponsibility }
 }
 
 OSCDataSpace : AbstractOSCDataSpace {
@@ -174,6 +158,24 @@ OSCDataSpace : AbstractOSCDataSpace {
 	getPairs { ^dict.getPairs }
 
 	updatePeers {|key, value| addrBook.sendExcluding(addrBook.me.name, oscPath, key, value); }
+
+	sync {|addr|
+		var syncAddr;
+		syncAddr = addr ?? { addrBook.citizens.reject({|cit| cit == addrBook.me }).detect({|cit| cit.online }).addr }; // look for the first online one who's not me
+		syncAddr.notNil.if({
+			syncRecOSCFunc = OSCFunc({|msg, time, addr|
+				var pairs;
+				pairs = msg[1..];
+				pairs.pairsDo({|key, val|
+					if(dict[key] != val, {
+						dict[key] = val;
+						this.changed(\val, key, val);
+					});
+				});
+			}, oscPath ++ "-sync-reply", syncAddr).oneShot;
+			syncAddr.sendMsg(oscPath ++ "-sync");
+		});
+	}
 }
 
 // the following represents a security risk, since people could use a pseudo-object to inject undesirable code
@@ -209,12 +211,29 @@ OSCObjectSpace : AbstractOSCDataSpace {
 		}, oscPath, recvPort: addrBook.me.addr.port).fix;
 	}
 
-	getPairs { ^dict.asSortedArray.collect({|pair| [pair[0], pair[1].asTextArchive]}).flatten }
+	getPairs { ^dict.asSortedArray.collect({|pair| [pair[0], encryptor.encryptBytes(pair[1].asBinaryArchive)]}).flatten }
 
 	updatePeers {|key, value|
-
 			addrBook.sendExcluding(addrBook.me.name, oscPath, key, encryptor.encryptBytes(value.asBinaryArchive));
+	}
 
+	sync {|addr|
+		var syncAddr;
+		syncAddr = addr ?? { addrBook.citizens.reject({|cit| cit == addrBook.me }).detect({|cit| cit.online }).addr }; // look for the first online one who's not me
+		syncAddr.notNil.if({
+			syncRecOSCFunc = OSCFunc({|msg, time, addr|
+				var pairs;
+				pairs = msg[1..];
+				pairs.pairsDo({|key, val|
+					val = encryptor.decryptBytes(val).unarchive;
+					if(dict[key] != val, {
+						dict[key] = val;
+						this.changed(\val, key, val);
+					});
+				});
+			}, oscPath ++ "-sync-reply", syncAddr).oneShot;
+			syncAddr.sendMsg(oscPath ++ "-sync");
+		});
 	}
 
 	put {|key, value|
