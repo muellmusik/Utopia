@@ -274,8 +274,8 @@ thisProcess.openUDPPort(3000);
 )
 // me2 adds an action for new descs
 (
-~synthDescRel2.addDependant({|descRelay, what, desc|
-	"Check out this new def!!\n\n%\n".format(desc.def.asCompileString).postln;
+~synthDescRel2.addDependant({|descRelay, what, desc, defcode|
+	"Check out this new def!!\n\n%\n".format(defcode).postln;
 });
 )
 

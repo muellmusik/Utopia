@@ -60,13 +60,18 @@ SynthDescRelay {
 
 	makeOSCFunc {
 		oscFunc = OSCFunc({|msg, time, addr|
-			var desc;
+			var desc, defcode, stream;
 			if(addrBook.addrs.includesEqual(addr), {
-				desc = encryptor.decryptBytes(msg[1]).unarchive;
+				stream = CollStream(encryptor.decryptBytes(msg[2]));
+				stream.getInt32; // 'SCgf'
+				stream.getInt32; // version
+				stream.getInt16; // 1
+				desc = SynthDesc.new.readSynthDef2(stream, true);
+				defcode = encryptor.decryptText(msg[1]);
 				if(desc.isKindOf(SynthDesc), { // check for safety
 					justAddedRemote = true;
 					lib.add(desc);
-					this.changed(\synthDesc, desc);
+					this.changed(\synthDesc, desc, defcode.asString);
 				}, { "SynthDescRelay received non-SynthDesc object: %. Object discarded".format(desc).warn; });
 			}, {"SynthDescRelay access attempt from unrecognised addr: %\n".format(addr).warn;});
 		}, oscPath, recvPort: addrBook.me.addr.port).fix;
@@ -86,10 +91,11 @@ SynthDescRelay {
 			\synthDescAdded, {
 				// If we've just received one from somebody else, don't let that trigger another send and a never ending loop
 				if(justAddedRemote.not, {
-					var desc;
+					var desc, def;
 					desc = moreArgs[0];
 					if(desc.isKindOf(SynthDesc), { // check for safety
-						addrBook.sendExcluding(addrBook.me.name, oscPath, encryptor.encryptBytes(desc.asBinaryArchive));
+						def = desc.def;
+						addrBook.sendExcluding(addrBook.me.name, oscPath, encryptor.encryptText(def.asCompileString), encryptor.encryptBytes(def.asBytes));
 					}, { "SynthDescRelay updated with non-SynthDesc object: %".format(desc).warn; });
 				}, { justAddedRemote = false });
 			}
