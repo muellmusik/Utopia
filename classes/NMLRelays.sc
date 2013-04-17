@@ -1,19 +1,20 @@
 // for history, etc.
 CodeRelay {
-	var addrBook, <>post, oscPath, codeDumpFunc, oscFunc;
+	var addrBook, <>post, oscPath, encryptor, codeDumpFunc, oscFunc;
 
-	*new {|addrBook, post = false, oscPath = '/codeRelay', codeDumpFunc|
-		^super.newCopyArgs(addrBook, post, oscPath, codeDumpFunc).init;
+	*new {|addrBook, post = false, oscPath = '/codeRelay', encryptor, codeDumpFunc|
+		^super.newCopyArgs(addrBook, post, oscPath, encryptor, codeDumpFunc).init;
 	}
 
 	init {
 		var interpreter;
-		this.makeOSCFunc;
+		encryptor = encryptor ?? { NonEncryptor }; // NonEncryptor uses noops
 		codeDumpFunc = codeDumpFunc ? { |code|
-			addrBook.sendAll(oscPath, addrBook.me.name, code);
+			addrBook.sendAll(oscPath, addrBook.me.name, encryptor.encryptText(code));
 		};
 		interpreter = thisProcess.interpreter;
 		interpreter.codeDump = interpreter.codeDump.addFunc(codeDumpFunc);
+		this.makeOSCFunc;
 	}
 
 	makeOSCFunc {
@@ -21,7 +22,7 @@ CodeRelay {
 			var name, code;
 			if(addrBook.addrs.includesEqual(addr), {
 				name = msg[1];
-				code = msg[2];
+				code = encryptor.decryptText(msg[2]);
 				this.changed(\code, name, code);
 				if(post, {
 					(name.asString ++ ":\n" ++ code).postln;
@@ -39,18 +40,21 @@ CodeRelay {
 	}
 }
 
-// Do we really need this? We could do it all with an OSCObjectSpace
+// This now uses binaryArchive for safety reasons, as this avoids the use of the interpreter
+// However, this could cause problems if you send to someone with a different version of SC
+// Possibly using the textArchive should be an option
 SynthDescRelay {
-	var addrBook, oscPath, libName, lib, oscFunc;
+	var addrBook, oscPath, libName, encryptor, lib, oscFunc;
 	var justAddedRemote = false;
 
-	*new {|addrBook, oscPath = '/synthDefRelay', libName = \global|
+	*new {|addrBook, oscPath = '/synthDefRelay', libName = \global, encryptor|
 		^super.newCopyArgs(addrBook, oscPath, libName).init;
 	}
 
 	init {
 		lib = SynthDescLib.getLib(libName);
 		lib.addDependant(this);
+		encryptor = encryptor ?? { NonEncryptor }; // NonEncryptor uses noops
 		this.makeOSCFunc;
 	}
 
@@ -58,10 +62,12 @@ SynthDescRelay {
 		oscFunc = OSCFunc({|msg, time, addr|
 			var desc;
 			if(addrBook.addrs.includesEqual(addr), {
-				desc = msg[1].asString.interpret;
-				justAddedRemote = true;
-				lib.add(desc);
-				this.changed(\synthDesc, desc);
+				desc = encryptor.decryptBytes(msg[1]).unarchive;
+				if(desc.isKindOf(SynthDesc), { // check for safety
+					justAddedRemote = true;
+					lib.add(desc);
+					this.changed(\synthDesc, desc);
+				}, { "SynthDescRelay received non-SynthDesc object: %. Object discarded".format(desc).warn; });
 			}, {"SynthDescRelay access attempt from unrecognised addr: %\n".format(addr).warn;});
 		}, oscPath, recvPort: addrBook.me.addr.port).fix;
 	}
@@ -80,7 +86,11 @@ SynthDescRelay {
 			\synthDescAdded, {
 				// If we've just received one from somebody else, don't let that trigger another send and a never ending loop
 				if(justAddedRemote.not, {
-					addrBook.sendExcluding(addrBook.me.name, oscPath, moreArgs[0].asTextArchive);
+					var desc;
+					desc = moreArgs[0];
+					if(desc.isKindOf(SynthDesc), { // check for safety
+						addrBook.sendExcluding(addrBook.me.name, oscPath, encryptor.encryptBytes(desc.asBinaryArchive));
+					}, { "SynthDescRelay updated with non-SynthDesc object: %".format(desc).warn; });
 				}, { justAddedRemote = false });
 			}
 		)
@@ -167,13 +177,22 @@ OSCDataSpace : AbstractOSCDataSpace {
 }
 
 // the following represents a security risk, since people could use a pseudo-object to inject undesirable code
-// It thus should only be used on a secure network with trusted peers, or with an authenticated addrBook (e.g. using ChallengeAuthenticator)
+// It is thus best used on a secure network with trusted peers, or with an authenticated addrBook (e.g. using ChallengeAuthenticator)
+// and/or using password protected encryption
 // It also has the option to reject instances of Event and subclasses (rejects by default)
+// This currenly uses binaryArchive for safety reasons, as this avoids the use of the interpreter, which could execute arbitrary code
+// However, this could cause problems if you send to someone with a different version of SC
+// Possibly using the textArchive should be an option
 OSCObjectSpace : AbstractOSCDataSpace {
-	var <>acceptEvents;
+	var <>acceptEvents, encryptor;
 
-	*new {|addrBook, acceptEvents = false, oscPath = '/oscObjectSpace'|
-		^super.new.acceptEvents_(acceptEvents).init(addrBook, oscPath);
+	*new {|addrBook, acceptEvents = false, oscPath = '/oscObjectSpace', encryptor|
+		^super.new.acceptEvents_(acceptEvents).init(addrBook, oscPath, encryptor);
+	}
+
+	init {|argAddrBook, argOSCPath, argEncryptor|
+		encryptor = argEncryptor ?? { NonEncryptor }; // NonEncryptor uses noops
+		super.init(argAddrBook, argOSCPath);
 	}
 
 	makeOSCFunc {
@@ -181,7 +200,7 @@ OSCObjectSpace : AbstractOSCDataSpace {
 			var key, val;
 			if(addrBook.addrs.includesEqual(addr), {
 				key = msg[1];
-				val = msg[2].asString.interpret; // OSC sends Strings as Symbols
+				val = encryptor.decryptBytes(msg[2]).unarchive;
 				if(acceptEvents || val.isKindOf(Event).not, {
 					dict[key] = val;
 					this.changed(\val, key, val);
@@ -193,9 +212,16 @@ OSCObjectSpace : AbstractOSCDataSpace {
 	getPairs { ^dict.asSortedArray.collect({|pair| [pair[0], pair[1].asTextArchive]}).flatten }
 
 	updatePeers {|key, value|
-		addrBook.sendExcluding(addrBook.me.name, oscPath, key, value.asTextArchive);
+
+			addrBook.sendExcluding(addrBook.me.name, oscPath, key, encryptor.encryptBytes(value.asBinaryArchive));
+
 	}
 
-	put {|key, value| value.checkCanArchive; super.put(key, value); } // at least this warns
+	put {|key, value|
+		value.checkCanArchive; // at least this warns
+		if(acceptEvents || value.isKindOf(Event).not, {
+			super.put(key, value);
+		}, { "OSCObjectSpace rejected event %\n".format(value).warn; });
+	}
 
 }
