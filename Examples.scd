@@ -135,7 +135,7 @@ thisProcess.openUDPPort(3000);
 ~chatter2.send("Works from me too");
 
 // cleanup
-~chatter1.free; ~chatter2.free;
+~chatter1.free; ~chatter2.free; ~win.close;
 
 
 
@@ -179,7 +179,7 @@ thisProcess.openUDPPort(3000);
 1 + 1;
 
 // cleanup
-~codeRelay1.free; ~codeRelay2.free;
+~codeRelay1.free; ~codeRelay2.free; ~win.close;
 
 
 
@@ -315,6 +315,6 @@ Pbind(\instrument, \foo, \freq, Pfunc({~params2[\freq]}), \server, ~me1RemoteSer
 
 1. Only objects which can be archived (i.e. those that do not contain open functions) can be sent
 2. OSCObjectSpace does not track internal changes in the objects it holds. You can set the key again with the changed object, but this will result in a new object being made in other peer's object spaces, not the old one being changed. If you want to sync changes to remote objects the OpenObject quark might be better.
-3. OSCObjectSpace can constitute a security risk, since a malicious party could insert a pseudo-object spoofing something else. For this reason, by default it does not accept Events, although you can enable that. For safety it is best to use it on a secure network. If auto-discovering peers on an open network, the use of an autheniticator such as ChallengeAuthenticator can provide additional security.
+3. OSCObjectSpace can constitute a security risk, since a malicious party could insert a pseudo-object spoofing something else. For this reason, by default it does not accept Events, although you can enable that. For safety it is best to use it on a secure network, and with encryption. If auto-discovering peers on an open network, the use of an autheniticator such as ChallengeAuthenticator can provide additional security.
 
 */
