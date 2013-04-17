@@ -31,7 +31,12 @@ CodeRelay {
 		}, oscPath, recvPort: addrBook.me.addr.port).fix;
 	}
 
-	free { oscFunc.free; }
+	free {
+		var interpreter;
+		oscFunc.free;
+		interpreter = thisProcess.interpreter;
+		interpreter.codeDump = interpreter.codeDump.removeFunc(codeDumpFunc);
+	}
 }
 
 // Do we really need this? We could do it all with an OSCObjectSpace
