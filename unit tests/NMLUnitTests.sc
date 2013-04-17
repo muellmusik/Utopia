@@ -4,8 +4,8 @@ TestAttendance : UnitTest {
 	var citizen2, addrBook2, attendance2;
 
 	setUp {
-		citizen1 = OSCitizen(\cit1, NetAddr.localAddr, Server.default.addr);
-		citizen2 = OSCitizen(\cit2, NetAddr.localAddr, Server.default.addr);
+		citizen1 = OSCitizen(\cit1, NetAddr.localAddr);
+		citizen2 = OSCitizen(\cit2, NetAddr.localAddr);
 
 		addrBook1 = AddrBook.new.addMe(citizen1);
 		addrBook2 = AddrBook.new.addMe(citizen2);
@@ -39,8 +39,8 @@ TestRegistrar : UnitTest {
 	var registrar;
 
 	setUp {
-		citizen1 = OSCitizen(\cit1, NetAddr.localAddr, Server.default.addr);
-		citizen2 = OSCitizen(\cit2, NetAddr.localAddr, Server.default.addr);
+		citizen1 = OSCitizen(\cit1, NetAddr.localAddr);
+		citizen2 = OSCitizen(\cit2, NetAddr.localAddr);
 
 		addrBook1 = AddrBook.new.addMe(citizen1);
 		addrBook2 = AddrBook.new.addMe(citizen2);
@@ -83,8 +83,8 @@ TestChatter : UnitTest {
 		var port2;
 		port2 = NetAddr.langPort + 1;
 		while({thisProcess.openUDPPort(port2).not}, {port2 = port2 + 1});
-		citizen1 = OSCitizen(\cit1, NetAddr.localAddr, Server.default.addr);
-		citizen2 = OSCitizen(\cit2, NetAddr.localAddr.port_(port2), Server.default.addr);
+		citizen1 = OSCitizen(\cit1, NetAddr.localAddr);
+		citizen2 = OSCitizen(\cit2, NetAddr.localAddr.port_(port2));
 
 		addrBook1 = AddrBook.new.addMe(citizen1).add(citizen2);
 		addrBook2 = AddrBook.new.addMe(citizen2).add(citizen1);
@@ -121,7 +121,7 @@ TestChallengeAuthenticator : UnitTest {
 	var challengeColl1, challengeColl2;
 
 	setUp {
-		citizen1 = OSCitizen(\cit1, NetAddr.localAddr, Server.default.addr);
+		citizen1 = OSCitizen(\cit1, NetAddr.localAddr);
 		challengeColl1 = Array.fill(1000, { 1.0.rand });
 		challengeColl2 = "The quick brown fox";
 	}
@@ -158,8 +158,8 @@ TestOSCDataSpace : UnitTest {
 		var port2;
 		port2 = NetAddr.langPort + 1;
 		while({thisProcess.openUDPPort(port2).not}, {port2 = port2 + 1});
-		citizen1 = OSCitizen(\cit1, NetAddr.localAddr, Server.default.addr);
-		citizen2 = OSCitizen(\cit2, NetAddr.localAddr.port_(port2), Server.default.addr);
+		citizen1 = OSCitizen(\cit1, NetAddr.localAddr);
+		citizen2 = OSCitizen(\cit2, NetAddr.localAddr.port_(port2));
 
 		addrBook1 = AddrBook.new.addMe(citizen1).add(citizen2);
 		addrBook2 = AddrBook.new.addMe(citizen2).add(citizen1);
@@ -197,8 +197,8 @@ TestOSCObjectSpace : UnitTest {
 		var port2;
 		port2 = NetAddr.langPort + 1;
 		while({thisProcess.openUDPPort(port2).not}, {port2 = port2 + 1});
-		citizen1 = OSCitizen(\cit1, NetAddr.localAddr, Server.default.addr);
-		citizen2 = OSCitizen(\cit2, NetAddr.localAddr.port_(port2), Server.default.addr);
+		citizen1 = OSCitizen(\cit1, NetAddr.localAddr);
+		citizen2 = OSCitizen(\cit2, NetAddr.localAddr.port_(port2));
 
 		addrBook1 = AddrBook.new.addMe(citizen1).add(citizen2);
 		addrBook2 = AddrBook.new.addMe(citizen2).add(citizen1);
