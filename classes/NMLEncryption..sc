@@ -15,6 +15,10 @@ NonEncryptor : NMLAbstractEncryptor {
 	*encryptText { |text| ^text }
 
 	*decryptText { |text| ^text }
+
+	*encryptBytes { |int8array| ^int8array }
+
+	*decryptBytes { |encryptedText| ^encryptedText }
 }
 
 // requires OpenSSL in your path
