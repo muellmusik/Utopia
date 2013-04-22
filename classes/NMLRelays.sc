@@ -167,7 +167,7 @@ OSCDataSpace : AbstractOSCDataSpace {
 
 	sync {|addr|
 		var syncAddr;
-		syncAddr = addr ?? { addrBook.citizens.reject({|cit| cit == addrBook.me }).detect({|cit| cit.online }).addr }; // look for the first online one who's not me
+		syncAddr = addr ?? { addrBook.peers.reject({|peer| peer == addrBook.me }).detect({|peer| peer.online }).addr }; // look for the first online one who's not me
 		syncAddr.notNil.if({
 			syncRecOSCFunc = OSCFunc({|msg, time, addr|
 				var pairs;
@@ -225,7 +225,7 @@ OSCObjectSpace : AbstractOSCDataSpace {
 
 	sync {|addr|
 		var syncAddr;
-		syncAddr = addr ?? { addrBook.citizens.reject({|cit| cit == addrBook.me }).detect({|cit| cit.online }).addr }; // look for the first online one who's not me
+		syncAddr = addr ?? { addrBook.peers.reject({|peer| peer == addrBook.me }).detect({|peer| peer.online }).addr }; // look for the first online one who's not me
 		syncAddr.notNil.if({
 			syncRecOSCFunc = OSCFunc({|msg, time, addr|
 				var pairs;

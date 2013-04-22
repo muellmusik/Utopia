@@ -16,8 +16,8 @@ Some functionality cannot be demonstrated this way
 ~addrBook = AddrBook.new;
 // to get updates, just add a dependant
 ~addrBook.addDependant({|addrBook, what, who|
-	{~listView.items = addrBook.citizens.collectAs({|cit|
-		cit.name ++ " | " ++ cit.addr.ip ++ " | " ++ if(cit.online, "online", "offline");
+	{~listView.items = addrBook.peers.collectAs({|peer|
+		peer.name ++ " | " ++ peer.addr.ip ++ " | " ++ if(peer.online, "online", "offline");
 	}, Array)}.defer;
 });
 
@@ -27,7 +27,7 @@ Some functionality cannot be demonstrated this way
 )
 
 //fake another participant
-~hail2 = Hail(me: OSCitizen(\me2, NetAddr.localAddr, s.addr));
+~hail2 = Hail(me: Peer(\me2, NetAddr.localAddr, s.addr));
 
 // \me2 goes offline
 ~hail2.free;
@@ -46,8 +46,8 @@ Some functionality cannot be demonstrated this way
 ~addrBook = AddrBook.new;
 // to get updates, just add a dependant
 ~addrBook.addDependant({|addrBook, what, who|
-	{~listView.items = addrBook.citizens.collectAs({|cit|
-		cit.name ++ " | " ++ cit.addr.ip ++ " | " ++ if(cit.online, "online", "offline");
+	{~listView.items = addrBook.peers.collectAs({|peer|
+		peer.name ++ " | " ++ peer.addr.ip ++ " | " ++ if(peer.online, "online", "offline");
 	}, Array)}.defer;
 });
 
@@ -58,7 +58,7 @@ Some functionality cannot be demonstrated this way
 )
 
 //fake another participant
-~registrant2 = Registrant(me: OSCitizen(\me2, NetAddr.localAddr, s.addr));
+~registrant2 = Registrant(me: Peer(\me2, NetAddr.localAddr, s.addr));
 
 // \me2 goes offline
 ~registrant2.free;
@@ -104,15 +104,15 @@ e.decryptText(a); // should say test
 ////////////////////////
 // Chatter, one of a number of classes which relay data to members of an AddrBook
 
-// make some citizens and address books
+// make some peers and address books
 (
 thisProcess.openUDPPort(3000);
-~cit1 = OSCitizen(\me1, NetAddr.localAddr);
-~cit2 = OSCitizen(\me2, NetAddr("127.0.0.1", 3000)); // I'll use a different port and simulate a different machine
-~addrBook1 = AddrBook().addMe(~cit1);
-~addrBook2 = AddrBook().addMe(~cit2);
-~addrBook1.add(~cit2);
-~addrBook2.add(~cit1);
+~peer1 = Peer(\me1, NetAddr.localAddr);
+~peer2 = Peer(\me2, NetAddr("127.0.0.1", 3000)); // I'll use a different port and simulate a different machine
+~addrBook1 = AddrBook().addMe(~peer1);
+~addrBook2 = AddrBook().addMe(~peer2);
+~addrBook1.add(~peer2);
+~addrBook2.add(~peer1);
 )
 
 ~chatter1 = Chatter(~addrBook1, false);
@@ -121,7 +121,7 @@ thisProcess.openUDPPort(3000);
 ~chatter1.send("howdy");
 ~chatter1.sendPrivate(\me2, "Psst... howdy!"); // send only to \me2
 
-// make a GUI for cit1
+// make a GUI for peer1
 (
 ~win = Window("Chatty Betty").front;
 ~win.layout = VLayout(~textField = TextField(), ~textView = TextView());
@@ -142,15 +142,15 @@ thisProcess.openUDPPort(3000);
 ////////////////////////
 // Code Relay
 
-// make some citizens and address books
+// make some peers and address books
 (
 thisProcess.openUDPPort(3000);
-~cit1 = OSCitizen(\me1, NetAddr.localAddr);
-~cit2 = OSCitizen(\me2, NetAddr("127.0.0.1", 3000)); // I'll use a different port and simulate a different machine
-~addrBook1 = AddrBook().addMe(~cit1);
-~addrBook2 = AddrBook().addMe(~cit2);
-~addrBook1.add(~cit2);
-~addrBook2.add(~cit1);
+~peer1 = Peer(\me1, NetAddr.localAddr);
+~peer2 = Peer(\me2, NetAddr("127.0.0.1", 3000)); // I'll use a different port and simulate a different machine
+~addrBook1 = AddrBook().addMe(~peer1);
+~addrBook2 = AddrBook().addMe(~peer2);
+~addrBook1.add(~peer2);
+~addrBook2.add(~peer1);
 )
 
 // only one posts code when received
@@ -163,7 +163,7 @@ thisProcess.openUDPPort(3000);
 \foo.postln;
 1 + 1;
 
-// make a GUI for cit1
+// make a GUI for peer1
 (
 ~win = Window("Codey Larry").front;
 ~win.layout = VLayout(~textView = TextView());
@@ -188,11 +188,11 @@ thisProcess.openUDPPort(3000);
 // Master and slave clocks must share a common time base, e.g. using the NTP class
 // Ticks are scheduled with a small latency, so as to avoid drift
 
-// make a citizen and an address book
+// make a peer and an address book
 (
-~cit1 = OSCitizen(\me1, NetAddr.localAddr);
+~peer1 = Peer(\me1, NetAddr.localAddr);
 ~addrBook = AddrBook();
-~addrBook.add(~cit1);
+~addrBook.add(~peer1);
 )
 
 // make some slaves first, then the master. They only advance when master ticks, so they should stay aligned
@@ -221,15 +221,15 @@ Pbind(\degree, Pseq((2..5), inf), \dur, 3, \octave, 6).play(~slave2, quant: 1);
 // Use OSCDataSpace and OSCObjectSpace, in this case to make local instances for remote Servers and share SynthDefs
 // as well as to share some parameters
 
-// make some citizens and address books
+// make some peers and address books
 (
 thisProcess.openUDPPort(3000);
-~cit1 = OSCitizen(\me1, NetAddr.localAddr);
-~cit2 = OSCitizen(\me2, NetAddr("127.0.0.1", 3000)); // I'll use a different port and simulate a different machine
-~addrBook1 = AddrBook().addMe(~cit1);
-~addrBook2 = AddrBook().addMe(~cit2);
-~addrBook1.add(~cit2);
-~addrBook2.add(~cit1);
+~peer1 = Peer(\me1, NetAddr.localAddr);
+~peer2 = Peer(\me2, NetAddr("127.0.0.1", 3000)); // I'll use a different port and simulate a different machine
+~addrBook1 = AddrBook().addMe(~peer1);
+~addrBook2 = AddrBook().addMe(~peer2);
+~addrBook1.add(~peer2);
+~addrBook2.add(~peer1);
 // make some client IDs; we only need this if we want to play on each other's servers
 ~me1ClientID = 1;
 ~me2ClientID = 2;

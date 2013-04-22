@@ -1,49 +1,49 @@
 // tests locally...
-TestAttendance : UnitTest {
-	var citizen1, addrBook1, attendance1;
-	var citizen2, addrBook2, attendance2;
+TestHail : UnitTest {
+	var peer1, addrBook1, hail1;
+	var peer2, addrBook2, hail2;
 
 	setUp {
-		citizen1 = OSCitizen(\cit1, NetAddr.localAddr);
-		citizen2 = OSCitizen(\cit2, NetAddr.localAddr);
+		peer1 = Peer(\peer1, NetAddr.localAddr);
+		peer2 = Peer(\peer2, NetAddr.localAddr);
 
-		addrBook1 = AddrBook.new.addMe(citizen1);
-		addrBook2 = AddrBook.new.addMe(citizen2);
+		addrBook1 = AddrBook.new.addMe(peer1);
+		addrBook2 = AddrBook.new.addMe(peer2);
 	}
 
 	tearDown {
-		attendance1.free;
-		attendance2.free;
+		hail1.free;
+		hail2.free;
 	}
 
-	test_takeAttendance {
+	test_hailingSignal {
 		var period = 1;
-		attendance1 = Attendance(addrBook1, period);
-		attendance2 = Attendance(addrBook2, period);
+		hail1 = Hail(addrBook1, period);
+		hail2 = Hail(addrBook2, period);
 
 		(period * 1.5).wait;
 
-		this.assert(addrBook1[\cit1] == addrBook2[\cit1], "% in both books".format(citizen1));
-		this.assert(addrBook1[\cit2] == addrBook2[\cit2], "% in both books".format(citizen2));
+		this.assert(addrBook1[\peer1] == addrBook2[\peer1], "% in both books".format(peer1));
+		this.assert(addrBook1[\peer2] == addrBook2[\peer2], "% in both books".format(peer2));
 
 		(period * 1.5).wait;
 
-		this.assert(addrBook1[\cit2].online, "citizen2 shows online");
-		this.assert(addrBook2[\cit1].online, "citizen1 shows online");
+		this.assert(addrBook1[\peer2].online, "peer2 shows online");
+		this.assert(addrBook2[\peer1].online, "peer1 shows online");
 	}
 }
 
 TestRegistrar : UnitTest {
-	var citizen1, addrBook1, registrant1;
-	var citizen2, addrBook2, registrant2;
+	var peer1, addrBook1, registrant1;
+	var peer2, addrBook2, registrant2;
 	var registrar;
 
 	setUp {
-		citizen1 = OSCitizen(\cit1, NetAddr.localAddr);
-		citizen2 = OSCitizen(\cit2, NetAddr.localAddr);
+		peer1 = Peer(\peer1, NetAddr.localAddr);
+		peer2 = Peer(\peer2, NetAddr.localAddr);
 
-		addrBook1 = AddrBook.new.addMe(citizen1);
-		addrBook2 = AddrBook.new.addMe(citizen2);
+		addrBook1 = AddrBook.new.addMe(peer1);
+		addrBook2 = AddrBook.new.addMe(peer2);
 	}
 
 	tearDown {
@@ -60,34 +60,34 @@ TestRegistrar : UnitTest {
 
 		(period * 1.5).wait;
 
-		this.assert(addrBook1[\cit1] == addrBook2[\cit1], "% in both books".format(citizen1));
-		this.assert(addrBook1[\cit2] == addrBook2[\cit2], "% in both books".format(citizen2));
+		this.assert(addrBook1[\peer1] == addrBook2[\peer1], "% in both books".format(peer1));
+		this.assert(addrBook1[\peer2] == addrBook2[\peer2], "% in both books".format(peer2));
 
 		(period * 1.5).wait;
 
-		this.assert(addrBook1[\cit2].online, "citizen2 shows online");
-		this.assert(addrBook2[\cit1].online, "citizen1 shows online");
+		this.assert(addrBook1[\peer2].online, "peer2 shows online");
+		this.assert(addrBook2[\peer1].online, "peer1 shows online");
 
 		registrant1.unregister;
 		(period * 1.5).wait;
 
-		this.assert(addrBook2[\cit1].isNil, "citizen1 unregistered successfully");
+		this.assert(addrBook2[\peer1].isNil, "peer1 unregistered successfully");
 	}
 }
 
 TestChatter : UnitTest {
-	var citizen1, addrBook1, chatter1;
-	var citizen2, addrBook2, chatter2;
+	var peer1, addrBook1, chatter1;
+	var peer2, addrBook2, chatter2;
 
 	setUp {
 		var port2;
 		port2 = NetAddr.langPort + 1;
 		while({thisProcess.openUDPPort(port2).not}, {port2 = port2 + 1});
-		citizen1 = OSCitizen(\cit1, NetAddr.localAddr);
-		citizen2 = OSCitizen(\cit2, NetAddr.localAddr.port_(port2));
+		peer1 = Peer(\peer1, NetAddr.localAddr);
+		peer2 = Peer(\peer2, NetAddr.localAddr.port_(port2));
 
-		addrBook1 = AddrBook.new.addMe(citizen1).add(citizen2);
-		addrBook2 = AddrBook.new.addMe(citizen2).add(citizen1);
+		addrBook1 = AddrBook.new.addMe(peer1).add(peer2);
+		addrBook2 = AddrBook.new.addMe(peer2).add(peer1);
 	}
 
 	tearDown {
@@ -105,23 +105,23 @@ TestChatter : UnitTest {
 		"Testing global chat:".postln;
 		chatter2.send("Hello Net!");
 
-		this.asynchAssert({messageReceived.notNil}, {messageReceived == "Hello Net!" && receivedFrom == \cit2}, "chat not received", 2);
+		this.asynchAssert({messageReceived.notNil}, {messageReceived == "Hello Net!" && receivedFrom == \peer2}, "chat not received", 2);
 
 		messageReceived = nil; receivedFrom = nil;
 		"Testing private chat:".postln;
-		chatter2.sendPrivate(\cit1, "Psst");
+		chatter2.sendPrivate(\peer1, "Psst");
 
-		this.asynchAssert({messageReceived.notNil}, {messageReceived == "Psst" && receivedFrom == \cit2}, "chat not received", 2);
+		this.asynchAssert({messageReceived.notNil}, {messageReceived == "Psst" && receivedFrom == \peer2}, "chat not received", 2);
 
 	}
 }
 
 TestChallengeAuthenticator : UnitTest {
-	var citizen1, challenge1;
+	var peer1, challenge1;
 	var challengeColl1, challengeColl2;
 
 	setUp {
-		citizen1 = OSCitizen(\cit1, NetAddr.localAddr);
+		peer1 = Peer(\peer1, NetAddr.localAddr);
 		challengeColl1 = Array.fill(1000, { 1.0.rand });
 		challengeColl2 = "The quick brown fox";
 	}
@@ -135,7 +135,7 @@ TestChallengeAuthenticator : UnitTest {
 		challenge1 = ChallengeAuthenticator(challengeColl1); // this will respond to itself
 
 		"Testing challenge authentication with Array of floats as challenge:".postln;
-		challenge1.authenticate(citizen1, {result = true });
+		challenge1.authenticate(peer1, {result = true });
 
 		this.asynchAssert({result.notNil}, {result}, "authentication timed out", 2);
 
@@ -144,25 +144,25 @@ TestChallengeAuthenticator : UnitTest {
 		challenge1 = ChallengeAuthenticator(challengeColl2); // this will respond to itself
 
 		"Testing challenge authentication with String as challenge:".postln;
-		challenge1.authenticate(citizen1, {result = true });
+		challenge1.authenticate(peer1, {result = true });
 
 		this.asynchAssert({result.notNil}, {result}, "authentication timed out", 2);
 	}
 }
 
 TestOSCDataSpace : UnitTest {
-	var citizen1, addrBook1, dataSpace1;
-	var citizen2, addrBook2, dataSpace2;
+	var peer1, addrBook1, dataSpace1;
+	var peer2, addrBook2, dataSpace2;
 
 	setUp {
 		var port2;
 		port2 = NetAddr.langPort + 1;
 		while({thisProcess.openUDPPort(port2).not}, {port2 = port2 + 1});
-		citizen1 = OSCitizen(\cit1, NetAddr.localAddr);
-		citizen2 = OSCitizen(\cit2, NetAddr.localAddr.port_(port2));
+		peer1 = Peer(\peer1, NetAddr.localAddr);
+		peer2 = Peer(\peer2, NetAddr.localAddr.port_(port2));
 
-		addrBook1 = AddrBook.new.addMe(citizen1).add(citizen2);
-		addrBook2 = AddrBook.new.addMe(citizen2).add(citizen1);
+		addrBook1 = AddrBook.new.addMe(peer1).add(peer2);
+		addrBook2 = AddrBook.new.addMe(peer2).add(peer1);
 	}
 
 	tearDown {
@@ -190,18 +190,18 @@ TestOSCDataSpace : UnitTest {
 }
 
 TestOSCObjectSpace : UnitTest {
-	var citizen1, addrBook1, objectSpace1;
-	var citizen2, addrBook2, objectSpace2;
+	var peer1, addrBook1, objectSpace1;
+	var peer2, addrBook2, objectSpace2;
 
 	setUp {
 		var port2;
 		port2 = NetAddr.langPort + 1;
 		while({thisProcess.openUDPPort(port2).not}, {port2 = port2 + 1});
-		citizen1 = OSCitizen(\cit1, NetAddr.localAddr);
-		citizen2 = OSCitizen(\cit2, NetAddr.localAddr.port_(port2));
+		peer1 = Peer(\peer1, NetAddr.localAddr);
+		peer2 = Peer(\peer2, NetAddr.localAddr.port_(port2));
 
-		addrBook1 = AddrBook.new.addMe(citizen1).add(citizen2);
-		addrBook2 = AddrBook.new.addMe(citizen2).add(citizen1);
+		addrBook1 = AddrBook.new.addMe(peer1).add(peer2);
+		addrBook2 = AddrBook.new.addMe(peer2).add(peer1);
 	}
 
 	tearDown {

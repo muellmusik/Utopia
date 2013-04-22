@@ -3,7 +3,7 @@
 // might be nice if addition to the AddrBook only took place once registered
 
 // uses dependancy to update interested parties
-OSCitizen {
+Peer {
 	var <name, <addr, <online;
 
 	*new {|name, addr, online = true|
@@ -33,27 +33,27 @@ AddrBook {
 
 	send {|name ...msg| dict[name].addr.sendMsg(*msg) }
 
-	sendAll {|...msg| dict.do({|citizen| citizen.addr.sendMsg(*msg); }); }
+	sendAll {|...msg| dict.do({|peer| peer.addr.sendMsg(*msg); }); }
 
-	sendAllBundle {|...msg| dict.do({|citizen| citizen.addr.sendBundle(*msg); }); }
+	sendAllBundle {|...msg| dict.do({|peer| peer.addr.sendBundle(*msg); }); }
 
-	sendExcluding {|name ...msg| dict.reject({|cit, citName| citName == name }).do({|citizen| citizen.addr.sendMsg(*msg); });}
+	sendExcluding {|name ...msg| dict.reject({|peer, peerName| peerName == name }).do({|peer| peer.addr.sendMsg(*msg); });}
 
-	add {|oscitizen| dict[oscitizen.name] = oscitizen; oscitizen.addDependant(this); this.changed(\add, oscitizen) }
+	add {|peer| dict[peer.name] = peer; peer.addDependant(this); this.changed(\add, peer) }
 
-	addMe {|meCitizen|
-		meCitizen = meCitizen ?? {
+	addMe {|mePeer|
+		mePeer = mePeer ?? {
 			var name;
 			name = "whoami".unixCmdGetStdOut;
 			if(name.last == Char.nl, {name = name.drop(-1)});
-			OSCitizen(name, NetAddr.localAddr)};
-		this.add(meCitizen);
-		me = meCitizen;
+			Peer(name, NetAddr.localAddr)};
+		this.add(mePeer);
+		me = mePeer;
 	}
 
 	at {|name| ^dict[name] }
 
-	remove {|oscitizen| dict[oscitizen.name] = nil; oscitizen.removeDependant(this); this.changed(\remove, oscitizen) }
+	remove {|peer| dict[peer.name] = nil; peer.removeDependant(this); this.changed(\remove, peer) }
 
 	removeAt {|name| this.remove(dict[name]) }
 
@@ -61,9 +61,9 @@ AddrBook {
 
 	names { ^dict.keys }
 
-	addrs { ^dict.values.collect({|citizen| citizen.addr }) }
+	addrs { ^dict.values.collect({|peer| peer.addr }) }
 
-	citizens { ^dict.values }
+	peers { ^dict.values }
 }
 
 // who's there?
@@ -89,12 +89,12 @@ Hail {
 		var replyPath;
 		replyPath = (oscPath ++ "-reply").asSymbol;
 		inOSCFunc = OSCFunc({|msg, time, addr|
-			var name, cit;
+			var name, peer;
 			name = msg[1];
 			if(lastResponses[name].isNil, {
-				cit = OSCitizen(name, addr);
-				authenticator.authenticate(cit, {
-					addrBook.add(cit);
+				peer = Peer(name, addr);
+				authenticator.authenticate(peer, {
+					addrBook.add(peer);
 					addrBook[name].online = true;
 					lastResponses[name] = time;
 				});
@@ -149,8 +149,8 @@ Registrar {
 		period.notNil.if({ this.ping; });
 	}
 
-	makeCitizen {|addr, name|
-		^OSCitizen(name, addr);
+	makePeer {|addr, name|
+		^Peer(name, addr);
 	}
 
 	makeOSCFuncs {
@@ -160,16 +160,16 @@ Registrar {
 		}, oscPath ++ "-pingRegistrar").fix;
 
 		registerOSCFunc = OSCFunc({|msg, time, addr|
-			var citizen;
-			citizen = this.makeCitizen(addr, msg[1]);
-			authenticator.authenticate(citizen, {
+			var peer;
+			peer = this.makePeer(addr, msg[1]);
+			authenticator.authenticate(peer, {
 				// tell everyone about the new arrival
-				addrBook.sendAll(oscPath ++ "-add", citizen.name, addr.ip, addr.port);
+				addrBook.sendAll(oscPath ++ "-add", peer.name, addr.ip, addr.port);
 				// tell the new arrival about everyone
-				addrBook.citizens.do({|cit|
-					addr.sendMsg(oscPath ++ "-add", cit.name, cit.addr.ip, cit.addr.port);
+				addrBook.peers.do({|peer|
+					addr.sendMsg(oscPath ++ "-add", peer.name, peer.addr.ip, peer.addr.port);
 				});
-				addrBook.add(citizen);
+				addrBook.add(peer);
 			});
 		}, oscPath).fix;
 
@@ -183,11 +183,11 @@ Registrar {
 
 		// make sure everyone is still online
 		pingReplyOSCFunc = OSCFunc({|msg, time, addr|
-			var name, citizen;
+			var name, peer;
 			name = msg[1];
-			citizen = addrBook[name];
-			citizen.notNil.if({
-				citizen.online_(true);
+			peer = addrBook[name];
+			peer.notNil.if({
+				peer.online_(true);
 				lastResponses[name] = time;
 				addrBook.sendAll(oscPath ++ "-online", name, true.binaryValue);
 			});
@@ -235,15 +235,15 @@ Registrant {
 		if(registrarAddr.isNil, { this.pingRegistrar }, { this.register });
 	}
 
-	makeCitizen {|name, hostname, port|
-		^OSCitizen(name, NetAddr(hostname.asString, port));
+	makePeer {|name, hostname, port|
+		^Peer(name, NetAddr(hostname.asString, port));
 	}
 
 	addOSCFuncs {
 		addOSCFunc = OSCFunc({|msg, time, addr|
-			var citizen;
-			citizen = this.makeCitizen(*msg[1..]);
-			addrBook.add(citizen);
+			var peer;
+			peer = this.makePeer(*msg[1..]);
+			addrBook.add(peer);
 		}, oscPath ++ "-add", registrarAddr, recvPort: addrBook.me.addr.port).fix;
 
 		removeOSCFunc = OSCFunc({|msg, time, addr|
@@ -253,10 +253,10 @@ Registrant {
 		}, oscPath ++ "-remove", registrarAddr, recvPort: addrBook.me.addr.port).fix;
 
 		onlineOSCFunc = OSCFunc({|msg, time, addr|
-			var name, citizen;
+			var name, peer;
 			name = msg[1];
-			citizen = addrBook[name];
-			citizen.notNil.if({ citizen.online_(msg[2].booleanValue) });
+			peer = addrBook[name];
+			peer.notNil.if({ peer.online_(msg[2].booleanValue) });
 		}, oscPath ++ "-online", registrarAddr, recvPort: addrBook.me.addr.port).fix;
 
 		pingOSCFunc = OSCFunc({|msg, time, addr|
