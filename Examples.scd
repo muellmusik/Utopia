@@ -23,17 +23,17 @@ Some functionality cannot be demonstrated this way
 
 ~addrBook.addMe; // will automatically add you using your user name
 
-~attendance = Attendance(~addrBook);
+~hail = Hail(~addrBook);
 )
 
 //fake another participant
-~attendance2 = Attendance(me: OSCitizen(\me2, NetAddr.localAddr, s.addr));
+~hail2 = Hail(me: OSCitizen(\me2, NetAddr.localAddr, s.addr));
 
 // \me2 goes offline
-~attendance2.free;
+~hail2.free;
 
 //cleanup
-~attendance.free; ~win.close;
+~hail.free; ~win.close;
 
 
 

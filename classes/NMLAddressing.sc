@@ -67,10 +67,10 @@ AddrBook {
 }
 
 // who's there?
-Attendance {
+Hail {
 	var <addrBook, period, oscPath, authenticator, me, inOSCFunc, outOSCFunc, lastResponses;
 
-	*new { |addrBook, period = 1.0, me, authenticator, oscPath = '/attendance'|
+	*new { |addrBook, period = 1.0, me, authenticator, oscPath = '/hail'|
 		addrBook = addrBook ?? { AddrBook.new };
 		^super.newCopyArgs(addrBook, period, oscPath, authenticator).init(me);
 	}
@@ -82,7 +82,7 @@ Attendance {
 		lastResponses = IdentityDictionary.new;
 		authenticator = authenticator ?? { NonAuthenticator };
 		this.makeOSCFuncs;
-		this.takeAttendance;
+		this.hailingSignal;
 	}
 
 	makeOSCFuncs {
@@ -111,7 +111,7 @@ Attendance {
 
 	free { inOSCFunc.free; outOSCFunc.free; }
 
-	takeAttendance {
+	hailingSignal {
 		var broadcastAddr;
 		NetAddr.broadcastFlag = true;
 		broadcastAddr = NMLNetAddrMP("255.255.255.255", 57120 + (0..7));
