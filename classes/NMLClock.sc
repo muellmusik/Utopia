@@ -2,7 +2,7 @@
 // mostly for demonstration purposes
 // these assume you have a shared timebase, e.g. via NTP
 
-SlaveClock : Clock {
+FollowerClock : Clock {
 	var masterAddr, oscPath, scheduler, tickOSCFunc, <tempo = 1;
 	var <beatsPerBar=4.0, barsPerBeat=0.25;
 	var <baseBarBeat=0.0, <baseBar=0.0;
@@ -62,7 +62,7 @@ SlaveClock : Clock {
 	}
 }
 
-MasterClock {
+ConductorClock {
 	var addrBook, latency, granularity, oscPath, tempoClock;
 
 	*new { |addrBook, latency = 0.05, granularity = 0.01, oscPath = '/masterClockTick', tempo, beats, seconds, queueSize=256|

@@ -198,10 +198,10 @@ thisProcess.openUDPPort(3000);
 // make some slaves first, then the master. They only advance when master ticks, so they should stay aligned
 // these could be on different machines, but you could also have multiple slaves on one machine...
 (
-~slave1 = SlaveClock(NetAddr.localAddr);
-~slave2 = SlaveClock(NetAddr.localAddr);
+~slave1 = FollowerClock(NetAddr.localAddr);
+~slave2 = FollowerClock(NetAddr.localAddr);
 )
-~master = MasterClock(~addrBook); // add a master which starts ticking, this would probably be on a different machine or process
+~master = ConductorClock(~addrBook); // add a master which starts ticking, this would probably be on a different machine or process
 
 ~slave1.sched(1, {\foo.postln}); SystemClock.sched(1, {\bar.postln});
 
