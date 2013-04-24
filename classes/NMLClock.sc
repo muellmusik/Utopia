@@ -7,7 +7,7 @@ FollowerClock : Clock {
 	var <beatsPerBar=4.0, barsPerBeat=0.25;
 	var <baseBarBeat=0.0, <baseBar=0.0;
 
-	*new {|masterAddr, oscPath = '/masterClockTick'|
+	*new {|masterAddr, oscPath = '/conductorClockTick'|
 		^super.newCopyArgs(masterAddr, oscPath).init;
 	}
 
@@ -65,7 +65,7 @@ FollowerClock : Clock {
 ConductorClock {
 	var addrBook, latency, granularity, oscPath, tempoClock;
 
-	*new { |addrBook, latency = 0.05, granularity = 0.01, oscPath = '/masterClockTick', tempo, beats, seconds, queueSize=256|
+	*new { |addrBook, latency = 0.05, granularity = 0.01, oscPath = '/conductorClockTick', tempo, beats, seconds, queueSize=256|
 		^super.newCopyArgs(addrBook, latency, granularity, oscPath).init(tempo, beats, seconds, queueSize).startTicking;
 	}
 
