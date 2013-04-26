@@ -64,6 +64,8 @@ AddrBook {
 	addrs { ^dict.values.collect({|peer| peer.addr }) }
 
 	peers { ^dict.values }
+
+	onlinePeers { ^dict.reject({|peer| peer.online.not }).values }
 }
 
 // who's there?
