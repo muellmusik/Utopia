@@ -87,3 +87,82 @@ ConductorClock {
 	stop { tempoClock.stop; }
 
 }
+
+/// Pseudo Reference Broadcast Synchronisation Clock
+/// These do not require a common timebase, and are self converging
+/// However, you probably need at least three participants for this to work properly
+
+/// this needs to keep track of which is last beacon
+BeaconClock : TempoClock {
+	var addrBook, beaconOSCFunc, compareOSCFunc, oscPath, compareDict;
+
+	*new { |addrBook, tempo, beats, seconds, queueSize=256, oscPath = '/beaconClock'|
+		^super.new(tempo, beats, seconds, queueSize).setVars(addrBook, oscPath).makeOSCFuncs.startBeacons;
+	}
+
+	setVars {|argAddrBook, argOSCPath| addrBook = argAddrBook; oscPath = argOSCPath; }
+
+	startBeacons {
+		var broadcastAddr, count = 0, myName;
+		// unusually we'll use broadcast here to avoid variations in send time
+		NetAddr.broadcastFlag = true;
+		broadcastAddr = NMLNetAddrMP("255.255.255.255", 57120 + (0..7));
+		myName = addrBook.me.name;
+		SystemClock.sched(rrand(0, 0.1) * addrBook.onlinePeers.size, { // what clock should this be on? Should it be permanent?
+			//(myName ++ "sending Beacon").postln;
+			broadcastAddr.sendMsg(oscPath, myName, count, addrBook.onlinePeers.size - 1); // number of replies to expect
+			count = count + 1;
+			(rrand(0.1, 0.2) * max(addrBook.onlinePeers.size, 1)); // minimum wait even if no other peers
+		});
+	}
+
+	makeOSCFuncs {
+		compareDict = IdentityDictionary.new;
+		beaconOSCFunc = OSCFunc({|msg, time, addr|
+			var name, count, numPeers;
+			if(addrBook.addrs.includesEqual(addr), {
+				name = msg[1];
+				count = msg[2];
+				numPeers = msg[3];
+				if(name != addrBook.me.name, { // ignore my own beacons
+					//(addrBook.me.name ++ "received Beacon").postln;
+					compareDict[(name ++ count).asSymbol] = IdentityDictionary[\numPeers -> numPeers, \replies->Array.new(numPeers)];
+					addrBook.sendExcluding(name, oscPath ++ '-compare', name ++ count, this.tempo, this.beats);
+				});
+			}, {"BeaconClock received beacon from unknown address: %\n".format(addr).warn;});
+		}, oscPath);
+
+		compareOSCFunc = OSCFunc({|msg, time, addr|
+			var key, tempo, beats, replies;
+			//\foo.postln;
+			//msg.postln;
+			key = msg[1];
+			if(addrBook.addrs.includesEqual(addr), {
+				if(compareDict[key].notNil, { // the second if is required at the moment to allow testing on the same machine
+					tempo = msg[2];
+					beats = msg[3];
+					//compareDict.postcs;
+					replies = compareDict[key][\replies];
+					replies.add([tempo, beats]);
+					//(addrBook.me.name ++ "received compare; replies: %\n").postf(replies);
+					if(replies.size == compareDict[key][\numPeers], {
+						this.calcTempoAndBeats(replies);
+						compareDict[key] = nil; // let if be GC'd
+					});
+				});
+			}, {"BeaconClock received compare message from unknown address: %\n".format(addr).warn;});
+		}, oscPath ++ '-compare');
+	}
+
+	calcTempoAndBeats {|replies|
+		var newTempo, newBeats;
+		replies = replies.flop;
+		// just average for now
+		// could do other things like take latest, or add
+		newTempo = replies[0].mean;
+		newBeats = replies[1].mean;
+		//"% newTempo: % newBeats: %\n".postf(addrBook.me.name, newTempo, newBeats);
+		this.tempo_(newTempo);
+		this.beats_(newBeats);
+	}
+}

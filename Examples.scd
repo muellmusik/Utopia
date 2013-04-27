@@ -218,6 +218,50 @@ Pbind(\degree, Pseq((2..5), inf), \dur, 3, \octave, 6).play(~slave2, quant: 1);
 
 
 ////////////////////////
+// Beacon Clocks
+
+(
+~peer1 = Peer(\me1, NetAddr("192.168.1.5", 57120));
+~peer2 = Peer(\me2, NetAddr("192.168.1.5", 57120));
+~peer3 = Peer(\me3, NetAddr("192.168.1.5", 57120));
+~addrBook1 = AddrBook().addMe(~peer1);
+~addrBook2 = AddrBook().addMe(~peer2);
+~addrBook3 = AddrBook().addMe(~peer3);
+~addrBook1.add(~peer2);
+~addrBook3.add(~peer2);
+~addrBook2.add(~peer1);
+~addrBook3.add(~peer1);
+~addrBook1.add(~peer3);
+~addrBook2.add(~peer3);
+)
+
+(
+~clock1 = BeaconClock(~addrBook1);
+~clock2 = BeaconClock(~addrBook2);
+~clock3 = BeaconClock(~addrBook3);
+)
+
+"Beats1: % Beats2: % Beats3: % Tempo1: % Tempo2: % Tempo3: %\n".postf(~clock1.beats, ~clock2.beats, ~clock3.beats, ~clock1.tempo, ~clock2.tempo, ~clock3.tempo);
+
+(
+Pbind(\degree, Pseq((1..3), inf)).play(~clock1);
+Pbind(\degree, Pseq((4..6), inf)).play(~clock2);
+Pbind(\degree, Pseq((8..10), inf)).play(~clock3);
+)
+
+(
+~clock2.tempo = 1.1;
+SystemClock.sched(0, {
+"Beats1: % Beats2: % Beats3: % Tempo1: % Tempo2: % Tempo3: %\n".postf(~clock1.beats, ~clock2.beats, ~clock3.beats, ~clock1.tempo, ~clock2.tempo, ~clock3.tempo);
+	0.1
+})
+)
+
+~clock3.tempo = 0.1;
+~clock3.tempo = 30;
+
+
+////////////////////////
 // Use OSCDataSpace and OSCObjectSpace, in this case to make local instances for remote Servers and share SynthDefs
 // as well as to share some parameters
 
