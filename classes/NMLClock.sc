@@ -160,7 +160,7 @@ BeaconClock : TempoClock {
 		// just average for now
 		// could do other things like take latest, or add
 		newTempo = replies[0].mean;
-		newBeats = replies[1].mean + (Main.elapsedTime - beaconTime * newTempo);
+		newBeats = replies[1].maxItem + (Main.elapsedTime - beaconTime * newTempo);
 		//"% newTempo: % newBeats: %\n".postf(addrBook.me.name, newTempo, newBeats);
 		this.tempo_(newTempo);
 		this.beats_(newBeats);
