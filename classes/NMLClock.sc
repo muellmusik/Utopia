@@ -126,7 +126,7 @@ BeaconClock : TempoClock {
 				numPeers = msg[3];
 				if(name != addrBook.me.name, { // ignore my own beacons
 					//(addrBook.me.name ++ "received Beacon").postln;
-					compareDict[(name ++ count).asSymbol] = IdentityDictionary[\numPeers -> numPeers, \replies->Array.new(numPeers)];
+					compareDict[(name ++ count).asSymbol] = IdentityDictionary[\numPeers -> numPeers, \replies->Array.new(numPeers), \beaconTime->time];
 					addrBook.sendExcluding(name, oscPath ++ '-compare', name ++ count, this.tempo, this.beats);
 				});
 			}, {"BeaconClock received beacon from unknown address: %\n".format(addr).warn;});
@@ -146,7 +146,7 @@ BeaconClock : TempoClock {
 					replies.add([tempo, beats]);
 					//(addrBook.me.name ++ "received compare; replies: %\n").postf(replies);
 					if(replies.size == compareDict[key][\numPeers], {
-						this.calcTempoAndBeats(replies);
+						this.calcTempoAndBeats(replies, compareDict[key][\beaconTime]);
 						compareDict[key] = nil; // let if be GC'd
 					});
 				});
@@ -154,13 +154,13 @@ BeaconClock : TempoClock {
 		}, oscPath ++ '-compare');
 	}
 
-	calcTempoAndBeats {|replies|
+	calcTempoAndBeats {|replies, beaconTime|
 		var newTempo, newBeats;
 		replies = replies.flop;
 		// just average for now
 		// could do other things like take latest, or add
 		newTempo = replies[0].mean;
-		newBeats = replies[1].mean;
+		newBeats = replies[1].mean + (Main.elapsedTime - beaconTime * newTempo);
 		//"% newTempo: % newBeats: %\n".postf(addrBook.me.name, newTempo, newBeats);
 		this.tempo_(newTempo);
 		this.beats_(newBeats);
