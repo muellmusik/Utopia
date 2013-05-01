@@ -27,7 +27,7 @@ Some functionality cannot be demonstrated this way
 )
 
 //fake another participant
-~hail2 = Hail(me: Peer(\me2, NetAddr.localAddr, s.addr));
+~hail2 = Hail(me: Peer(\me2, NetAddr.localAddr));
 
 // \me2 goes offline
 ~hail2.free;
@@ -58,7 +58,7 @@ Some functionality cannot be demonstrated this way
 )
 
 //fake another participant
-~registrant2 = Registrant(me: Peer(\me2, NetAddr.localAddr, s.addr));
+~registrant2 = Registrant(me: Peer(\me2, NetAddr.localAddr));
 
 // \me2 goes offline
 ~registrant2.free;
