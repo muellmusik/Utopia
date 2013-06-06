@@ -103,14 +103,18 @@ BeaconClock : TempoClock {
 	setVars {|argAddrBook, argOSCPath| addrBook = argAddrBook; oscPath = argOSCPath; }
 
 	startBeacons {
-		var broadcastAddr, count = 0, myName;
+		var broadcastAddr, count = 0, myName, numReplies;
 		// unusually we'll use broadcast here to avoid variations in send time
 		NetAddr.broadcastFlag = true;
 		broadcastAddr = NMLNetAddrMP("255.255.255.255", 57120 + (0..7));
 		myName = addrBook.me.name;
 		SystemClock.sched(rrand(0, 0.1) * addrBook.onlinePeers.size, { // what clock should this be on? Should it be permanent?
 			//(myName ++ "sending Beacon").postln;
-			broadcastAddr.sendMsg(oscPath, myName, count, addrBook.onlinePeers.size - 1); // number of replies to expect
+			// number of replies to expect
+			numReplies = addrBook.onlinePeers.size;
+			// only listen to my own beacons if I need to
+			if(numReplies > 2, {numReplies = numReplies -1});
+			broadcastAddr.sendMsg(oscPath, myName, count, numReplies);
 			count = count + 1;
 			(rrand(0.1, 0.2) * max(addrBook.onlinePeers.size, 1)); // minimum wait even if no other peers
 		});
@@ -124,7 +128,7 @@ BeaconClock : TempoClock {
 				name = msg[1];
 				count = msg[2];
 				numPeers = msg[3];
-				if(name != addrBook.me.name, { // ignore my own beacons
+				if(name != addrBook.me.name || (numPeers < 3), { // ignore my own beacons if possible
 					//(addrBook.me.name ++ "received Beacon").postln;
 					compareDict[(name ++ count).asSymbol] = IdentityDictionary[\numPeers -> numPeers, \replies->Array.new(numPeers), \beaconTime->time];
 					addrBook.sendExcluding(name, oscPath ++ '-compare', name ++ count, this.tempo, this.beats);
