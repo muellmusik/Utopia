@@ -34,7 +34,7 @@ definitionlist::
 
 SECTION:: Citizen Communication
 
-Utopia provides a variety of classes for communicating different sorts of information between Peers:
+image::Tradtelefon.png::Utopia provides a variety of classes for communicating different sorts of information between Peers:
 
 definitionlist::
      ## link::Classes/Chatter::
