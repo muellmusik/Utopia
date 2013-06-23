@@ -1,0 +1,81 @@
+TITLE:: Utopia
+categories:: Utopia
+summary:: A modular library for networked music systems
+
+STRONG::Utopia:: |juːˈtəʊpɪə|
+EMPHASIS::noun::
+
+An imagined place or state of things in which everything is perfect. The word was first used in the book Utopia (1516) by Sir Thomas More.
+
+ORIGIN based on Greek EMPHASIS::ou ‘not’ + topos ‘place.’::
+
+SECTION:: Introduction
+
+Utopia is a modular library for the creation of networked music applications, and builds upon the work of the Republic Quark and other existing network systems in SuperCollider. It aims to be modular (features available largely 'à la carte'), secure (provides methods for authentication and encryption), and flexible (to the extent that it's possible, tries not to impose a particular design of architecture). It provides functionality for synchronisation, communication, code sharing, and data sharing.
+
+SECTION:: Basic Building Blocks
+
+The central class of Utopia is link::Classes/AddrBook::. This is essentially a dictionary of link::Classes/Peer:: instances, which represent participants or nodes in a networked music system. AddrBook is not monolithic, and a given system could use multiple instances of it to represent different subgroups, etc. It provides methods for looking up and communicating with one or more members. Most objects in Utopia take an AddrBook as an argument, and respond to changes in it when appropriate. An AddrBook generally represents a (possibly dynamic) collection of intended recipients for one or more types of communication, and where possible the use of broadcast messages is avoided to allow for precise managing of information flow.
+
+Similarly, most classes allow you to specify an OSC path, which allows for things like multiple simultaneous chat networks (e.g. one for general chat, one for 'shouting'), or to further control membership in particular activities. In general objects signal change via Object's dependancy mechanism (see link::Classes/Object#Dependancy:: and link::http://en.wikipedia.org/wiki/Observer_pattern::), which keeps the classes lightweight and loosely coupled, and makes the creation of custom GUIs etc., straightforward and quick.
+
+SECTION:: Founding Your Utopia
+
+image::GardenCities.png#From Garden Cities of Tomorrow (1902) by Ebenezer Howard::As noted above most objects in Utopia take an link::Classes/AddrBook:: as an argument. Utopia provides multiple ways of populating an AddrBook, depending on the desired system design:
+
+definitionlist::
+     ## De-centralised Discovery
+     || The link::Classes/Hail:: class allows for Peers to automatically discover each other on a network.
+     ## Centralised Discovery
+     || The link::Classes/Registrar::/link::Classes/Registrant:: classes allow for centralised discovery. Peers register with a central node, which announces any changes in membership to all Peers. This could for instance be running on a machine not being used for sound production to allow for stability in the event of a Peer crashing.
+     ## Manual Discovery
+     || One can also manually populate an AddrBook, which can be useful in cases when IP addresses and/or participants are fixed and known.
+::
+
+SECTION:: Citizen Communication
+
+Utopia provides a variety of classes for communicating different sorts of information between Peers:
+
+definitionlist::
+     ## link::Classes/Chatter::
+     || A class for text chat between Peers.
+     ## link::Classes/CodeRelay::
+     || Shares all code executed by a Peer with all other Peers in an AddrBook.
+     ## link::Classes/SynthDescRelay::
+     || Shares link::Classes/SynthDesc::s between Peers. (SynthDef sharing between multiple link::Classes/Server::s can be accomplished using link::Classes/SynthDescLib::.)
+     ## link::Classes/OSCDataSpace::
+     || A shared data space in the form of a dictionary of Open Sound Control data types (floats, ints, symbols).
+     ## link::Classes/OSCObjectSpace::
+     || A shared data space in the form of a dictionary of SC objects. Only archivable objects can be exchanged in this way, and there is no automatic syncing of changed state. Use with caution.
+     ## link::Classes/ConductorClock::/link::Classes/FollowerClock::
+     || A centralised approach to a shared time base. Each ConductorClock can have multiple followers.
+     ## link::Classes/BeaconClock::
+     || An experimental attempt at a clock using Reference Broadcast Synchronisation. Decentralised and flexible, this approach should adapt to changing membership.
+::
+     
+     
+
+SECTION:: Guarding the walls
+
+The discovery classes described above can take an authenticator object as an argument, to test whether joining Peers have permission to join an AddrBook. Currently Utopia supplies two types:
+
+definitionlist::
+     ## link::Classes/ChallengeAuthenticator::
+     || This uses a collection known to all participants as a challenge test. This could be something like the full text of War and Peace.
+     ## link::Classes/GroupPasswordAuthenticator::
+     || This uses a shared password to authenticate Peers attempting to join an AddrBook.
+::
+
+GroupPasswordAuthenticator takes an encryptor as an argument, to prevent passwords being sent in plaintext. Encryptors can also be used by Utopia's chat, code-sharing, and data-sharing classes. There are currently two types:
+
+definitionlist::
+     ## link::Classes/NonEncryptor::
+     || This is a no-op class which is used in cases where no encryption is needed.
+     ## link::Classes/OpenSSLSymEncryptor::
+     || This uses OpenSSL's symmetric key abilities to encrypt data using a shared password. This requires that you have OpenSSL installed in your path. (See link::http://www.openssl.org/::. OpenSSL comes standard on some operating systems.) The default cipher used is aes-128-cbc.
+::
+
+
+SECTION:: Expanding our borders
+
+Utopia is currently an alpha release. It is an open source project and welcomes contibutions or suggestions. It is hosted at link::https://github.com/muellmusik/NetMusicLib::. Please file any requests or issues there.
