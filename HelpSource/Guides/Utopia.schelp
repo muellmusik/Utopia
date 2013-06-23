@@ -13,6 +13,8 @@ SECTION:: Introduction
 
 Utopia is a modular library for the creation of networked music applications, and builds upon the work of the Republic Quark and other existing network systems in SuperCollider. It aims to be modular (features available largely 'à la carte'), secure (provides methods for authentication and encryption), and flexible (to the extent that it's possible, tries not to impose a particular design of architecture). It provides functionality for synchronisation, communication, code sharing, and data sharing.
 
+image::more_utopia.png#Yes, that one...::
+
 SECTION:: Basic Building Blocks
 
 The central class of Utopia is link::Classes/AddrBook::. This is essentially a dictionary of link::Classes/Peer:: instances, which represent participants or nodes in a networked music system. AddrBook is not monolithic, and a given system could use multiple instances of it to represent different subgroups, etc. It provides methods for looking up and communicating with one or more members. Most objects in Utopia take an AddrBook as an argument, and respond to changes in it when appropriate. An AddrBook generally represents a (possibly dynamic) collection of intended recipients for one or more types of communication, and where possible the use of broadcast messages is avoided to allow for precise managing of information flow.
@@ -34,7 +36,7 @@ definitionlist::
 
 SECTION:: Citizen Communication
 
-image::Tradtelefon.png::Utopia provides a variety of classes for communicating different sorts of information between Peers:
+Utopia provides a variety of classes for communicating different sorts of information between Peers:image::Tradtelefon.png#The Trådtelefon: A popular form of communication::
 
 definitionlist::
      ## link::Classes/Chatter::
@@ -66,7 +68,7 @@ definitionlist::
      || This uses a shared password to authenticate Peers attempting to join an AddrBook.
 ::
 
-GroupPasswordAuthenticator takes an encryptor as an argument, to prevent passwords being sent in plaintext. Encryptors can also be used by Utopia's chat, code-sharing, and data-sharing classes. There are currently two types:
+image::nonsuch.png#Some such palace or other...::GroupPasswordAuthenticator takes an encryptor as an argument, to prevent passwords being sent in plaintext. Encryptors can also be used by Utopia's chat, code-sharing, and data-sharing classes. There are currently two types:
 
 definitionlist::
      ## link::Classes/NonEncryptor::
@@ -79,3 +81,5 @@ definitionlist::
 SECTION:: Expanding our borders
 
 Utopia is currently an alpha release. It is an open source project and welcomes contibutions or suggestions. It is hosted at link::https://github.com/muellmusik/NetMusicLib::. Please file any requests or issues there.
+
+image::clt7166.png#Yet Another Utopia…::
