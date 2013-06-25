@@ -1,0 +1,55 @@
+TITLE:: Peer
+summary:: A networked participant in Utopia-based systems 
+categories:: Utopia
+related:: Guides/Utopia
+
+DESCRIPTION::
+A Peer represents a node in a link::Guides/Utopia:: based network music system. Peers are usually contained in instances of link::Classes/AddrBook::.
+
+
+CLASSMETHODS::
+
+METHOD:: new
+Create a new Peer.
+
+ARGUMENT:: name
+A link::Classes/Symbol:: or link::Classes/String:: specifying a name for this Peer. This name should be unique within a given link::Classes/AddrBook::.
+
+ARGUMENT:: addr
+A link::Classes/NetAddr:: specifying the IP address and port on which this Peer can be reached.
+
+ARGUMENT:: online
+A link::Classes/Boolean:: indicating whether or not this Peer is online. Classes like link::Classes/Hail:: and link::Classes/Registrar:: set this value automatically.
+
+returns:: A Peer instance.
+
+
+INSTANCEMETHODS::
+PRIVATE:: printOn
+
+METHOD:: name
+Get this Peer's name.
+
+returns:: A link::Classes/Symbol::
+
+METHOD:: online
+Get or set whether this Peer is currently online. Usually an object like a link::Classes/Hail:: or link::Classes/Registrar:: would set this value automatically.
+
+ARGUMENT:: bool
+(describe argument here)
+
+returns:: A link::Classes/Boolean::
+
+METHOD:: ==
+Test whether this Peer instance is equivalent to another. Peers are equivalent if their addrs, names, and online statuses are equivalent.
+
+ARGUMENT:: other
+Another Peer.
+
+returns:: A link::Classes/Boolean::
+
+METHOD:: addr
+Get this Peer's addr.
+
+returns:: A link::Classes/NetAddr::
+
