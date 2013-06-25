@@ -11,7 +11,7 @@ ORIGIN based on Greek EMPHASIS::ou ‘not’ + topos ‘place.’::
 
 SECTION:: Introduction
 
-Utopia is a modular library for the creation of networked music applications, and builds upon the work of the Republic Quark and other existing network systems in SuperCollider. It aims to be modular (features available largely 'à la carte'), secure (provides methods for authentication and encryption), and flexible (to the extent that it's possible, tries not to impose a particular design of architecture). It provides functionality for synchronisation, communication, code sharing, and data sharing.
+Utopia is a modular library for the creation of networked music applications, and builds upon the work of the Republic Quark and other existing network systems in SuperCollider. It aims to be modular (features available largely 'à la carte'), secure (provides methods for authentication and encryption), and flexible (to the extent possible, it tries not to impose a particular design or architecture). It provides functionality for synchronisation, communication, code sharing, and data sharing.
 
 image::more_utopia.png#Yes, that one...::
 
@@ -23,7 +23,7 @@ Similarly, most classes allow you to specify an OSC path, which allows for thing
 
 SECTION:: Founding Your Utopia
 
-image::GardenCities.png#From Garden Cities of Tomorrow (1902) by Ebenezer Howard::As noted above most objects in Utopia take an link::Classes/AddrBook:: as an argument. Utopia provides multiple ways of populating an AddrBook, depending on the desired system design:
+image::GardenCities.png#From Garden Cities of Tomorrow (1902) by Ebenezer Howard::Utopia provides multiple ways of populating an link::Classes/AddrBook::, depending on the desired system design:
 
 definitionlist::
      ## De-centralised Discovery
