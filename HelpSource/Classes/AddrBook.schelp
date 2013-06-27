@@ -1,0 +1,116 @@
+TITLE:: AddrBook
+summary:: Dictionary of networked Peers
+categories:: Utopia, External Control>OSC
+related:: Guides/Utopia, Classes/Peer, Classes/Hail, Classes/Registrar, Classes/Registrant, Guides/OSC_Communication
+
+DESCRIPTION::
+AddrBook is essentially a dictionary of link::Classes/Peer:: instances, which represent participants or nodes in a networked music system. AddrBook is not a singleton, and a given system could use multiple instances of it to represent different subgroups, etc. Most objects in Utopia take an AddrBook as an argument, and respond to changes in it when appropriate. An AddrBook is generally used as a (possibly dynamic) collection of intended recipients for one or more types of communication.
+
+CLASSMETHODS::
+
+METHOD:: new
+Create a new instance.
+
+returns:: An AddrBook
+
+
+INSTANCEMETHODS::
+private:: init, update, changed
+
+
+METHOD:: add
+Add a link::Classes/Peer:: to this AddrBook.
+
+ARGUMENT:: peer
+The link::Classes/Peer:: to add.
+
+METHOD:: remove
+Remove a link::Classes/Peer:: from this AddrBook.
+
+ARGUMENT:: peer
+The Peer to remove.
+
+METHOD:: removeAt
+Remove a link::Classes/Peer:: from this AddrBook, specified by name.
+
+ARGUMENT:: name
+A link::Classes/Symbol:: corresponding to the name of the Peer to remove.
+
+METHOD:: addMe
+Add a link::Classes/Peer:: to this AddrBook which represents the localhost.
+
+ARGUMENT:: mePeer
+The link::Classes/Peer:: to add.
+
+METHOD:: send
+Send an OSC message to one of the Peers in this AddrBook.
+
+ARGUMENT:: name
+A link::Classes/Symbol:: corresponding to the name of the Peer to whom the message should be sent.
+
+ARGUMENT::  ... msg
+One or more additional arguments comprising the OSC message to send.
+
+METHOD:: sendAll
+Send an OSC message to all of the Peers in this AddrBook.
+
+ARGUMENT::  ... msg
+One or more arguments comprising the OSC message to send.
+
+METHOD:: sendAllBundle
+Send an OSC bundle to all of the Peers in this AddrBook.
+
+ARGUMENT:: time
+The timestamp for the bundle, specified as some number of seconds into the future. A nil time indicates 'as soon as possible'.
+
+ARGUMENT::  ... msg
+One or more link::Classes/Array::s consisting of the OSC messages in the bundle.
+
+METHOD:: sendExcluding
+Send an OSC message to all of the Peers in this AddrBook, except for the one specified by name.
+
+ARGUMENT:: name
+A link::Classes/Symbol:: corresponding to the name of the Peer to whom the message should emphasis::not:: be sent.
+
+ARGUMENT::  ... msg
+One or more arguments comprising the OSC message to send.
+
+METHOD:: at
+Look up a Peer by name.
+
+ARGUMENT:: name
+A link::Classes/Symbol:: corresponding to the name of the Peer to look up.
+
+returns:: A link::Classes/Peer:: if one with the specified name is found, otherwise nil.
+
+METHOD:: names
+Get the names of the Peers in this AddrBook.  
+
+returns:: A link::Classes/Set:: containing link::Classes/Symbol::s corresponding to the names of the Peers in this AddrBook.
+
+METHOD:: peers
+Get all the Peers in this AddrBook
+
+returns:: A link::Classes/Set:: containing the Peers in this AddrBook.
+
+METHOD:: onlinePeers
+Get all the currently online Peers in this AddrBook
+
+returns:: A link::Classes/Set:: containing the Peers in this AddrBook which are currently online.
+
+METHOD:: me
+Get the Peer representing the localhost.
+
+returns:: A link::Classes/Peer:: if me is defined, otherwise nil.
+
+METHOD:: addrs
+Get all the addresses of the Peers in this AddrBook
+
+returns:: A link::Classes/Set:: containing the link::Classes/NetAddr::s of the Peers in this AddrBook.
+
+
+EXAMPLES::
+
+code::
+(some example code)
+::
