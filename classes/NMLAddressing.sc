@@ -35,7 +35,7 @@ AddrBook {
 
 	sendAll {|...msg| dict.do({|peer| peer.addr.sendMsg(*msg); }); }
 
-	sendAllBundle {|...msg| dict.do({|peer| peer.addr.sendBundle(*msg); }); }
+	sendAllBundle {|time ...msg| dict.do({|peer| peer.addr.sendBundle(time, *msg); }); }
 
 	sendExcluding {|name ...msg| dict.reject({|peer, peerName| peerName == name }).do({|peer| peer.addr.sendMsg(*msg); });}
 
