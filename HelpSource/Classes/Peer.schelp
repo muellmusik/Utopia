@@ -1,7 +1,7 @@
 TITLE:: Peer
 summary:: A networked participant in Utopia-based systems 
-categories:: Utopia
-related:: Guides/Utopia
+categories:: Utopia, External Control>OSC
+related:: Guides/Utopia, Classes/AddrBook, Guides/OSC Communication
 
 DESCRIPTION::
 A Peer represents a node in a link::Guides/Utopia:: based network music system. Peers are usually contained in instances of link::Classes/AddrBook::.

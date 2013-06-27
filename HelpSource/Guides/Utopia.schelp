@@ -1,6 +1,7 @@
 TITLE:: Utopia
-categories:: Utopia
+categories:: Utopia, External Control>OSC
 summary:: A modular library for networked music systems
+related:: Guides/OSC Communication
 
 STRONG::Utopia:: |juːˈtəʊpɪə|
 EMPHASIS::noun::
@@ -17,7 +18,7 @@ image::more_utopia.png#Yes, that one...::
 
 SECTION:: Basic Building Blocks
 
-The central class of Utopia is link::Classes/AddrBook::. This is essentially a dictionary of link::Classes/Peer:: instances, which represent participants or nodes in a networked music system. AddrBook is not monolithic, and a given system could use multiple instances of it to represent different subgroups, etc. It provides methods for looking up and communicating with one or more members. Most objects in Utopia take an AddrBook as an argument, and respond to changes in it when appropriate. An AddrBook generally represents a (possibly dynamic) collection of intended recipients for one or more types of communication, and where possible the use of broadcast messages is avoided to allow for precise managing of information flow.
+The central class of Utopia is link::Classes/AddrBook::. This is essentially a dictionary of link::Classes/Peer:: instances, which represent participants or nodes in a networked music system. AddrBook is not a singleton, and a given system could use multiple instances of it to represent different subgroups, etc. It provides methods for looking up and communicating with one or more members. Most objects in Utopia take an AddrBook as an argument, and respond to changes in it when appropriate. An AddrBook is generally used as a (possibly dynamic) collection of intended recipients for one or more types of communication, and where possible the use of broadcast messages is avoided to allow for precise managing of information flow.
 
 Similarly, most classes allow you to specify an OSC path, which allows for things like multiple simultaneous chat networks (e.g. one for general chat, one for 'shouting'), or to further control membership in particular activities. In general objects signal change via Object's dependancy mechanism (see link::Classes/Object#Dependancy:: and link::http://en.wikipedia.org/wiki/Observer_pattern::), which keeps the classes lightweight and loosely coupled, and makes the creation of custom GUIs etc., straightforward and quick.
 
