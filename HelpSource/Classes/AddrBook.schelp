@@ -40,7 +40,7 @@ METHOD:: addMe
 Add a link::Classes/Peer:: to this AddrBook which represents the localhost.
 
 ARGUMENT:: mePeer
-The link::Classes/Peer:: to add.
+An optional link::Classes/Peer:: to add as me. If nil this method will automatically create a Peer, whose name var will be set using the 'whoami' command line utility.
 
 METHOD:: send
 Send an OSC message to one of the Peers in this AddrBook.
