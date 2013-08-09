@@ -18,6 +18,10 @@ Peer {
 		^result;
 	}
 
+	hash {
+		^this.instVarHash(#[\name, \addr, \online])
+	}
+
 	// post pretty
 	printOn { |stream|
 		stream << this.class.name << "(" <<* [name, addr, online] << ")"
