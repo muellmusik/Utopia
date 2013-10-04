@@ -23,9 +23,7 @@ Peer {
 	online_ {|bool| if(bool != online, { online = bool; this.changed(\online) }) }
 
 	== {|other|
-		var result;
-		result = (name == other.name) && (addr == other.addr) && (online == other.online);
-		^result;
+		^this.compareObject(other, #[\name, \addr, \online])
 	}
 
 	hash {
@@ -57,7 +55,7 @@ AddrBook {
 		peer = peer.as(Peer);
 		dict[peer.name] = peer;
 		peer.addDependant(this);
-		this.changed(\add, peer);
+		this.changed(\add, peer)
 	}
 
 	addMe {|mePeer|
