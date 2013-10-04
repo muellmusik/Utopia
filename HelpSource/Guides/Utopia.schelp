@@ -1,7 +1,7 @@
 TITLE:: Utopia
 categories:: Utopia, External Control>OSC
 summary:: A modular library for networked music systems
-related:: Guides/OSC Communication
+related:: Guides/OSC_Communication
 
 STRONG::Utopia:: |juːˈtəʊpɪə|
 EMPHASIS::noun::
@@ -55,8 +55,8 @@ definitionlist::
      ## link::Classes/BeaconClock::
      || An experimental attempt at a clock using Reference Broadcast Synchronisation. Decentralised and flexible, this approach should adapt to changing membership.
 ::
-     
-     
+
+
 
 SECTION:: Guarding the walls
 
