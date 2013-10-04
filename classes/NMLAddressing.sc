@@ -10,6 +10,16 @@ Peer {
 		^super.newCopyArgs(name.asSymbol, addr, online);
 	}
 
+	*newFrom { |item|
+		if(item.isKindOf(this)) { ^item };
+		item = item ?? { this.defaultName };
+		^this.new(item, NetAddr.localAddr)
+	}
+
+	*defaultName {
+		^"whoami".unixCmdGetStdOut.replace("\n", "");
+	}
+
 	online_ {|bool| if(bool != online, { online = bool; this.changed(\online) }) }
 
 	== {|other|
@@ -43,14 +53,15 @@ AddrBook {
 
 	sendExcluding {|name ...msg| dict.reject({|peer, peerName| peerName == name }).do({|peer| peer.addr.sendMsg(*msg); });}
 
-	add {|peer| dict[peer.name] = peer; peer.addDependant(this); this.changed(\add, peer) }
+	add {|peer|
+		peer = peer.as(Peer);
+		dict[peer.name] = peer;
+		peer.addDependant(this);
+		this.changed(\add, peer);
+	}
 
 	addMe {|mePeer|
-		mePeer = mePeer ?? {
-			var name;
-			name = "whoami".unixCmdGetStdOut;
-			if(name.last == Char.nl, {name = name.drop(-1)});
-			Peer(name, NetAddr.localAddr)};
+		mePeer = mePeer.as(Peer);
 		this.add(mePeer);
 		me = mePeer;
 	}
