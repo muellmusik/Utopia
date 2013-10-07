@@ -1,5 +1,5 @@
 // extensions to AddrBook for a rewrite of Republic
-
+// doesn't work yet, probably because Hail class still makes a Peer.
 
 RepPeer : Peer {
 	var <server;
@@ -38,12 +38,15 @@ RepAddrBook : AddrBook {
 
 	names { ^nameList }
 
-		// always resolves to a single peer name, a flat list of names, or nil
+	// always resolves to a single peer name, a flat list of names, or nil
+	// instead of checking for class, this method could be refactored into method dispatches,
+	// but this would be more intrusive to the class library
+
 	resolveWhere { |where|
 		// \all = sendAll
 
 			// expand list, flat to allow group substitution
-		if (where.isKindOf(Array)) {
+		if (where.isSequenceableCollection) {
 			^where.collect(this.resolveWhere(_)).flat.reject(_.isNil)
 		};
 				// nil = me
