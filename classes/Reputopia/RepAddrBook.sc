@@ -11,7 +11,9 @@ RepPeer : Peer {
 	}
 }
 
+
 RepAddrBook : AddrBook {
+
 	var <nameList;
 	var <groups;
 	classvar <>verbose = false;
@@ -19,9 +21,16 @@ RepAddrBook : AddrBook {
 	init { super.init; nameList = List.new; groups = (); }
 
 		// by default, add names in historical order
-	add {|peer| super.add(peer); nameList.add(peer.name) }
+	add {|peer|
+		peer = peer.as(Peer);
+		super.add(peer);
+		if(nameList.includes(peer.name).not) { nameList.add(peer.name) };
+	}
 
-	remove {|peer| super.remove(peer); nameList.remove(peer.name) }
+	remove {|peer|
+		super.remove(peer);
+		nameList.remove(peer.name)
+	}
 
 	addGroup { |groupname, names| groups.put(groupname, names); }
 
