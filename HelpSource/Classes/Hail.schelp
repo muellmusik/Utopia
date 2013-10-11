@@ -6,7 +6,7 @@ related:: Guides/Utopia, Classes/Peer, Classes/AddrBook, Classes/Registrar, Clas
 DESCRIPTION::
 Hail allows decentralised automatic discovery of other participants in a Utopia based network music application. It does this by broadcasting a 'hailing signal' consisting of a specified OSC path ('/hail' by default). It automatically adds and informs new Peers, and tracks online status, marking unresponsive Peers as offline.
 
-By using different OSC paths multiple subnetworks can exist on the same physical network. Each participant in a subnetwork should created a Hail with the same path. Since it is decentralised, it does not depend on any one node remaining stable and online.
+By using different OSC paths multiple subnetworks can exist on the same physical network. Each participant in a subnetwork should create a Hail with the same path. Since it is decentralised, it does not depend on any one node remaining stable and online.
 
 Hail holds an link::Classes/AddrBook:: as an instance variable. Users can pass this to other Utopia objects, and know that it will be updated as appropriate. Thus Hail can fufill the role of membership management in a Utopia based system or subsystem.
 
