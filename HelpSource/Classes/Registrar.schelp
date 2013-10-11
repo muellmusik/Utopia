@@ -1,0 +1,49 @@
+TITLE:: Registrar
+summary:: Centralised Registration point for participants in a Utopia based network music system
+categories:: Utopia, External Control>OSC
+related:: Guides/Utopia, Classes/Peer, Classes/AddrBook, Classes/Registrant, Classes/Hail, Guides/OSC_Communication
+
+DESCRIPTION::
+Registrar allows centralised registration of participants in a Utopia based network music application. Registrar can run on one of the nodes in a subnetwork, or on a separate node. (The latter can be useful where stability is a concern.) Registrar keeps track of link::Classes/Peers:: joining and leaving a subnetwork, and their online status, and distributes this information to all members.
+
+By using different OSC paths multiple subnetworks can exist on the same physical network. Each participant in a subnetwork should create a link::Classes/Registrant:: with the same path.
+
+Registrar holds an link::Classes/AddrBook:: as an instance variable. This can be passed to other Utopia objects on the Registrant's node, and will be updated as appropriate.
+
+CLASSMETHODS::
+
+METHOD:: new
+Create a new Registrar.
+
+ARGUMENT:: addrBook
+An optional link::Classes/AddrBook:: which this instance will use to store discovered link::Classes/Peer::s. Users can pass this to other Utopia objects, and know that it will be updated as appropriate. If nil, one will be automatically created.
+
+ARGUMENT:: period
+The interval in seconds between pings to Peers being sent. Peers which have not responded for > (2 * period) seconds will be marked offline.
+
+ARGUMENT:: authenticator
+An optional authenticator, which is used to authenticate other Peers attempting to join the system. This should be an instance of a subclass of link::Classes/NMLAbstractAuthenticator::, such as link::Classes/ChallengeAuthenticator:: or link::Classes/GroupPasswordAuthenticator::. If nil  Registrar will create an instance of link::Classes/NonAuthenticator:: (no authentication). 
+
+ARGUMENT:: oscPath
+An OSC compliant path in the form of a link::Classes/Symbol:: or link::Classes/String:: used to identify this subnetwork. By using different paths multiple subnetworks can exist on the same physical network. In simple cases the default ('/register') can be used.
+
+returns:: A new Registrar instance.
+
+
+INSTANCEMETHODS::
+
+private:: ping, makePeer, makeOSCFuncs, checkOnline, init, makePeer
+
+METHOD:: free
+Free this object and its link::Classes/OSCFunc::s. After this, this Registrar (and probably its AddrBook) should not be used.
+
+METHOD:: addrBook
+Get this Registrar's link::Classes/AddrBook::. This can be passed to other Utopia objects.
+
+returns:: An link::Classes/AddrBook::.
+
+EXAMPLES::
+
+code::
+(some example code)
+::
