@@ -4,7 +4,7 @@ categories:: Relay classes
 related:: AddrBook, Peer, Hail, Registrar, SynthDescRelay, etc.
 
 DESCRIPTION::
-CodeRelay relays code on evaluation ...
+When evaluating code, CodeRelay sends the code as string to all the peers in its AddrBook. The This can be used to create a shared code history in collaborative live coding performances.
 
 CLASSMETHODS::
 
@@ -34,23 +34,34 @@ INSTANCEMETHODS::
 METHOD:: onlyWorkingCode
 When true, coderelay sends only code that has evaluated correctly.
 
+returns:: a Boolean
+
 METHOD:: private
 When true, coderelay does not send code. Useful for temporary experiments that would clutter a performance history.
+
+returns:: a Boolean
 
 METHOD:: post
 When true, coderelay will post to post window.
 
+returns:: a Boolean
+
 METHOD:: free
 remove coderelay by removing codeDumpFunc from interpreter and freeing its oscFunc.
+returns:: the coderelay
+
 
 METHOD:: addHistory
 add History such that coderelay writes own code and relayed code into History.
+returns:: the coderelay
 
 METHOD:: removeHistory
 remove History from coderelay.
+returns:: the coderelay
 
 METHOD:: makeOSCFunc
 internal method, makes the OSCFunc that receives shared code.
+returns:: the coderelay
 
 EXAMPLES::
 
@@ -64,14 +75,14 @@ h = Hail(a);
 c = CodeRelay(a);
 c.dump;
 
-//
+// start History and make its gui for testing
 History.start.localOff;
 History.makeWin(20@20);
 
 // code relay now sends to History window:
 c.addHistory;
 
-// silly code lines to checkj that they show up in History window,
+// silly code lines that should show up in History window,
 // or on connected peers if present
 1 + 2;
 
