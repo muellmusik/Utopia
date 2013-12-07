@@ -1,0 +1,85 @@
+TITLE:: CodeRelay
+summary:: relays code to network peers and History
+categories:: Relay classes
+related:: AddrBook, Peer, Hail, Registrar, SynthDescRelay, etc.
+
+DESCRIPTION::
+CodeRelay relays code on evaluation ...
+
+CLASSMETHODS::
+
+METHOD:: new
+create a new CodeRelay
+
+ARGUMENT:: addrBook
+an AddrBook where Peer-s are registered
+
+ARGUMENT:: post
+a flag whether to post code to the post window. default: false
+
+ARGUMENT:: oscPath
+the oscPath to use for relaying. default: '/codeRelay'
+
+ARGUMENT:: encryptor
+an (optional) encryptor for codeStrings.
+
+ARGUMENT:: codeDumpFunc
+an optional function to relay the code strings. default nil will be replaced by a standard function which relays to all peers in the addrBook.
+
+returns:: a new CodeRelay
+
+
+INSTANCEMETHODS::
+
+METHOD:: onlyWorkingCode
+When true, coderelay sends only code that has evaluated correctly.
+
+METHOD:: private
+When true, coderelay does not send code. Useful for temporary experiments that would clutter a performance history.
+
+METHOD:: post
+When true, coderelay will post to post window.
+
+METHOD:: free
+remove coderelay by removing codeDumpFunc from interpreter and freeing its oscFunc.
+
+METHOD:: addHistory
+add History such that coderelay writes own code and relayed code into History.
+
+METHOD:: removeHistory
+remove History from coderelay.
+
+METHOD:: makeOSCFunc
+internal method, makes the OSCFunc that receives shared code.
+
+EXAMPLES::
+
+code::
+// make an address book
+a = AddrBook.new; a.addMe;
+// make a hail, so other peers on other laptops can join the network
+h = Hail(a);
+
+// make a shared relay
+c = CodeRelay(a);
+c.dump;
+
+//
+History.start.localOff;
+History.makeWin(20@20);
+
+// code relay now sends to History window:
+c.addHistory;
+
+// silly code lines to checkj that they show up in History window,
+// or on connected peers if present
+1 + 2;
+
+42 == 23;
+
+// remove coderelay and free its resources.
+c.free;
+h.free; // same for hail and History
+History.end;
+
+::

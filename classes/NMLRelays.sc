@@ -1,6 +1,8 @@
-// for history, etc.
+// for shared code history, etc.
 CodeRelay {
 	var addrBook, <>post, oscPath, encryptor, codeDumpFunc, oscFunc;
+	var <>private = false, <>onlyWorkingCode = true;
+	var historyFunc;
 
 	*new {|addrBook, post = false, oscPath = '/codeRelay', encryptor, codeDumpFunc|
 		^super.newCopyArgs(addrBook, post, oscPath, encryptor, codeDumpFunc).init;
@@ -9,9 +11,14 @@ CodeRelay {
 	init {
 		var interpreter;
 		encryptor = encryptor ?? { NonEncryptor }; // NonEncryptor uses noops
-		codeDumpFunc = codeDumpFunc ? { |code|
-			addrBook.sendAll(oscPath, addrBook.me.name, encryptor.encryptText(code));
-		};
+
+		codeDumpFunc = codeDumpFunc ?? { { |code, result, func|
+			if (private or: { onlyWorkingCode and: func.isNil }) {
+				"dont send";
+			} {
+				addrBook.sendAll(oscPath, addrBook.me.name, encryptor.encryptText(code));
+			};
+		} };
 		interpreter = thisProcess.interpreter;
 		interpreter.codeDump = interpreter.codeDump.addFunc(codeDumpFunc);
 		this.makeOSCFunc;
@@ -34,9 +41,21 @@ CodeRelay {
 
 	free {
 		var interpreter;
+		this.releaseDependants;
 		oscFunc.free;
 		interpreter = thisProcess.interpreter;
 		interpreter.codeDump = interpreter.codeDump.removeFunc(codeDumpFunc);
+	}
+
+	addHistory {
+		historyFunc = historyFunc ?? { { |changer, what, who, text|
+			History.enter(text.asString, who);
+		}};
+		this.addDependant(historyFunc);
+	}
+
+	removeHistory {
+		this.removeDependant(historyFunc);
 	}
 }
 
@@ -220,7 +239,7 @@ OSCObjectSpace : AbstractOSCDataSpace {
 	getPairs { ^dict.asSortedArray.collect({|pair| [pair[0], encryptor.encryptBytes(pair[1].asBinaryArchive)]}).flatten }
 
 	updatePeers {|key, value|
-			addrBook.sendExcluding(addrBook.me.name, oscPath, key, encryptor.encryptBytes(value.asBinaryArchive));
+		addrBook.sendExcluding(addrBook.me.name, oscPath, key, encryptor.encryptBytes(value.asBinaryArchive));
 	}
 
 	sync {|addr|
