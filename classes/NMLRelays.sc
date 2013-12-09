@@ -133,6 +133,7 @@ AbstractOSCDataSpace {
 		dict = IdentityDictionary.new;
 		this.makeSyncRequestOSCFunc;
 		this.makeOSCFunc;
+		this.sync;
 	}
 
 	put {|key, value| dict[key] = value; this.changed(\val, key, value); this.updatePeers(key, value);}
@@ -184,22 +185,35 @@ OSCDataSpace : AbstractOSCDataSpace {
 
 	updatePeers {|key, value| addrBook.sendExcluding(addrBook.me.name, oscPath, key, value); }
 
-	sync {|addr|
-		var syncAddr;
-		syncAddr = addr ?? { addrBook.peers.reject({|peer| peer == addrBook.me }).detect({|peer| peer.online }).addr }; // look for the first online one who's not me
-		syncAddr.notNil.if({
-			syncRecOSCFunc = OSCFunc({|msg, time, addr|
-				var pairs;
-				pairs = msg[1..];
-				pairs.pairsDo({|key, val|
-					if(dict[key] != val, {
-						dict[key] = val;
-						this.changed(\val, key, val);
+	sync {|addr, period = 0.3, timeout = inf|
+		var syncAddr, started, waiting = true;
+		{
+			started = thisThread.seconds;
+			while({waiting && (thisThread.seconds - started < timeout)}, {
+				syncAddr = addr ?? {
+					var peer;
+					peer = addrBook.peers.reject({|peer| peer == addrBook.me }).detect({|peer| peer.online });
+					peer.notNil.if({peer.addr}, nil);
+				}; // look for the first online one who's not me
+				syncAddr.notNil.if({
+					syncRecOSCFunc.isNil.if({
+						syncRecOSCFunc = OSCFunc({|msg, time, addr|
+							var pairs;
+							waiting = false;
+							pairs = msg[1..];
+							pairs.pairsDo({|key, val|
+								if(dict[key] != val, {
+									dict[key] = val;
+									this.changed(\val, key, val);
+								});
+							});
+						}, oscPath ++ "-sync-reply", syncAddr).oneShot;
 					});
+					syncAddr.sendMsg(oscPath ++ "-sync");
 				});
-			}, oscPath ++ "-sync-reply", syncAddr).oneShot;
-			syncAddr.sendMsg(oscPath ++ "-sync");
-		});
+				period.wait;
+			});
+		}.fork;
 	}
 }
 
@@ -242,23 +256,36 @@ OSCObjectSpace : AbstractOSCDataSpace {
 		addrBook.sendExcluding(addrBook.me.name, oscPath, key, encryptor.encryptBytes(value.asBinaryArchive));
 	}
 
-	sync {|addr|
-		var syncAddr;
-		syncAddr = addr ?? { addrBook.peers.reject({|peer| peer == addrBook.me }).detect({|peer| peer.online }).addr }; // look for the first online one who's not me
-		syncAddr.notNil.if({
-			syncRecOSCFunc = OSCFunc({|msg, time, addr|
-				var pairs;
-				pairs = msg[1..];
-				pairs.pairsDo({|key, val|
-					val = encryptor.decryptBytes(val).unarchive;
-					if(dict[key] != val, {
-						dict[key] = val;
-						this.changed(\val, key, val);
+	sync {|addr, period = 0.3, timeout = inf|
+		var syncAddr, started, waiting = true;
+		{
+			started = thisThread.seconds;
+			while({waiting && (thisThread.seconds - started < timeout)}, {
+				syncAddr = addr ?? {
+					var peer;
+					peer = addrBook.peers.reject({|peer| peer == addrBook.me }).detect({|peer| peer.online });
+					peer.notNil.if({peer.addr}, nil);
+				}; // look for the first online one who's not me
+				syncAddr.notNil.if({
+					syncRecOSCFunc.isNil.if({
+						syncRecOSCFunc = OSCFunc({|msg, time, addr|
+							var pairs;
+							waiting = false;
+							pairs = msg[1..];
+							pairs.pairsDo({|key, val|
+								val = encryptor.decryptBytes(val).unarchive;
+								if(dict[key] != val, {
+									dict[key] = val;
+									this.changed(\val, key, val);
+								});
+							});
+						}, oscPath ++ "-sync-reply", syncAddr).oneShot;
 					});
+					syncAddr.sendMsg(oscPath ++ "-sync");
 				});
-			}, oscPath ++ "-sync-reply", syncAddr).oneShot;
-			syncAddr.sendMsg(oscPath ++ "-sync");
-		});
+				period.wait;
+			});
+		}.fork;
 	}
 
 	put {|key, value|
