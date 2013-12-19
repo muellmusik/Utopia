@@ -213,7 +213,7 @@ GroupManager {
 		^super.newCopyArgs(addrDict).init(oscPath);
 	}
 
-	init { |oscPath| dataSpace = OSCObjectSpace(addrDict, oscPath);  dataSpace.addDependant(this); }
+	init { |oscPath| dataSpace = OSCObjectSpace(addrDict, false, oscPath);  dataSpace.addDependant(this); }
 
 	add { |groupname, names| dataSpace.put(groupname, names);  }
 
