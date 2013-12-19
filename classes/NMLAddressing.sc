@@ -207,13 +207,13 @@ PeerGroup {
 
 // addrDict could be any dictionary like object that understands the asAddrBook method, so probably an AddrBook or a ServerRegistry
 GroupManager {
-	var <addrDict, dataSpace;
+	var <addrDict, <dataSpace;
 
 	*new {|addrDict, oscPath = \groupsDataSpace|
 		^super.newCopyArgs(addrDict).init(oscPath);
 	}
 
-	init { |oscPath| dataSpace = OSCDataSpace(addrDict, oscPath);  dataSpace.addDependant(this); }
+	init { |oscPath| dataSpace = OSCObjectSpace(addrDict, oscPath);  dataSpace.addDependant(this); }
 
 	add { |groupname, names| dataSpace.put(groupname, names);  }
 
