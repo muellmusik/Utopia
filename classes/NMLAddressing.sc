@@ -224,7 +224,7 @@ GroupManager {
 	// Anyway, this allows lazy resolution
 	at {|groupname| ^PeerGroup(groupname, this); }
 
-	resolve {|groupname| ^addrDict[dataSpace[groupname]] }
+	resolve {|groupname| ^dataSpace[groupname].collect({|name| addrDict[name]}) }
 
 	update { |… args| this.changed(args) } // register dependants to observe changes in groups
 }
