@@ -186,7 +186,7 @@ AllNotMePeerGroup : AbstractPeerGroup {
 
 	*new {|addrDict| ^super.newCopyArgs(addrDict); }
 
-	targetCollection { ^addrDict.peers.remove(addrDict.me) }
+	targetCollection { ^addrDict.peers.reject({|peer| peer.name == addrDict.me.name }) }
 }
 
 
