@@ -118,6 +118,8 @@ AddrBook {
 	asPeerGroup { ^AllPeerGroup(this) }
 
 	asOthersPeerGroup { ^AllNotMePeerGroup(this) }
+
+	asAddrBook { }
 }
 
 // a Dict like class that provides a way to register Servers automatically between a number of Peers
@@ -147,6 +149,8 @@ ServerRegistry {
 	keys { ^serverDict.keys }
 
 	values { ^serverDict.values }
+
+	asAddrBook { ^addrBook }
 }
 
 AbstractPeerGroup {
@@ -201,7 +205,7 @@ PeerGroup {
 	targetCollection { ^manager.resolve(name) }
 }
 
-// addrDict could be any dictionary like object, but probably an AddrBook or a ServerRegistry
+// addrDict could be any dictionary like object that understands the asAddrBook method, so probably an AddrBook or a ServerRegistry
 GroupManager {
 	var <addrDict, dataSpace;
 

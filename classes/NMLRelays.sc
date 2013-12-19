@@ -128,7 +128,7 @@ AbstractOSCDataSpace {
 	var addrBook, oscPath, oscFunc, syncRecOSCFunc, syncRequestOSCFunc, dict;
 
 	init {|argAddrBook, argOSCPath|
-		addrBook = argAddrBook;
+		addrBook = argAddrBook.asAddrBook;
 		oscPath = argOSCPath;
 		dict = IdentityDictionary.new;
 		this.makeSyncRequestOSCFunc;
