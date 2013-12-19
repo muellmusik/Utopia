@@ -139,7 +139,7 @@ ServerRegistry {
 		oscDataSpace.addDependant({|changed, what, name, port|
 			if(what == \val, {
 				// could also have peers send the options for their servers
-				serverDict[name] = Server(name, NetAddr(addrBook[name].addr.hostname, port), options, myServer.clientID);
+				serverDict[name] = Server(name, NetAddr(addrBook[name].addr.ip, port), options, myServer.clientID);
 			});
 		});
 	}
