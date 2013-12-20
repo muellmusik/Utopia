@@ -145,7 +145,7 @@ ServerRegistry {
 
 	addDataSpace {
 		serverDict = IdentityDictionary.new;
-		oscDataSpace = OSCDataSpace(addrBook, oscPath); // a dataspace of server ports
+		oscDataSpace = OSCObjectSpace(addrBook, false, oscPath); // a dataspace of server ports
 		oscDataSpace.addDependant({|changed, what, name, vals|
 			if(what == \val, {
 				// could also have peers send the options for their servers
