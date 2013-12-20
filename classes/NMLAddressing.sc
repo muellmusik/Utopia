@@ -135,16 +135,16 @@ ServerRegistry {
 	}
 
 	addMyServer {|server|
+		// avoid changed call for local case
+		oscDataSpace.removeDependant(dependancyFunc);
 		myServer = server ?? {Server.default};
 		this[addrBook.me.name] = myServer;
+		oscDataSpace.addDependant(dependancyFunc);
 	}
 
 	put {|name, server|
-		// avoid changed call for local case
-		oscDataSpace.removeDependant(dependancyFunc);
 		serverDict[name] = server;
 		oscDataSpace[name] = server !? {server.addr};
-		oscDataSpace.addDependant(dependancyFunc);
 	}
 
 	addDataSpace {
