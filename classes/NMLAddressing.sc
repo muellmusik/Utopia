@@ -122,25 +122,34 @@ AddrBook {
 
 // a Dict like class that provides a way to register Servers automatically between a number of Peers
 // the addrBook contains NetAddrs for Peers (sclang!) that will add servers
-// the dataspace is a shared dictionary of servers
-// right now takes ip from sender, but shouldn't
+// the dataspace is a shared dictionary of ips and ports
+// for 1 server per client use addMyServer, but other arrangements are possible
+// Todo: automate clientID allocations
 ServerRegistry {
-	var addrBook, myServer, options, oscPath, oscDataSpace, serverDict;
+	var addrBook, clientID, options, oscPath, oscDataSpace, serverDict, myServer;
 
 	// maybe should have an encryptor as well
-	*new {|addrBook, myServer, options, oscPath = '/serverRegistry'|
-		^super.newCopyArgs(addrBook, myServer ?? {Server.default}, options, oscPath).addDataSpace;
+	*new {|addrBook, clientID, options, oscPath = '/serverRegistry'|
+		^super.newCopyArgs(addrBook, clientID, options, oscPath).addDataSpace;
+	}
+
+	addMyServer {|server|
+		myServer = server ?? {Server.default};
+		this[addrBook.me.name] = myServer;
+	}
+
+	put {|name, server|
+		serverDict[name] = server;
+		oscDataSpace[name] = server !? {[myServer.addr.ip, myServer.addr.port]};
 	}
 
 	addDataSpace {
 		serverDict = IdentityDictionary.new;
-		serverDict[addrBook.me.name] = myServer;
 		oscDataSpace = OSCDataSpace(addrBook, oscPath); // a dataspace of server ports
-		oscDataSpace[addrBook.me.name] = myServer.addr.port;
-		oscDataSpace.addDependant({|changed, what, name, port|
+		oscDataSpace.addDependant({|changed, what, name, vals|
 			if(what == \val, {
 				// could also have peers send the options for their servers
-				serverDict[name] = Server(name, NetAddr(addrBook[name].addr.ip, port), options, myServer.clientID);
+				serverDict[name] = Server(name, NetAddr(vals[0], vals[1]), options, clientID);
 			});
 		});
 	}
