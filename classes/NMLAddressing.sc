@@ -3,6 +3,8 @@
 // might be nice if addition to the AddrBook only took place once registered
 
 // uses dependancy to update interested parties
+// Peer spoofs a NetAddr for sending purposes
+
 Peer {
 	var <name, <addr, <online;
 
@@ -13,7 +15,7 @@ Peer {
 	*newFrom { |item|
 		if(item.isKindOf(this)) { ^item };
 		item = item ?? { this.defaultName };
-		^this.new(item, NetAddr.localAddr)
+		^this.new(item, LocalNetAddr("127.0.0.1", NetAddr.langPort))
 	}
 
 	*defaultName {
@@ -34,6 +36,46 @@ Peer {
 	printOn { |stream|
 		stream << this.class.name << "(" <<* [name, addr, online] << ")"
 	}
+
+	sendRaw { arg rawArray;
+		addr.sendRaw(rawArray);
+	}
+
+	sendMsg { arg ... args;
+		addr.sendMsg(*args);
+	}
+
+	sendBundle { arg time ... args;
+		addr.sendBundle(time, *args);
+	}
+
+	sendClumpedBundles { arg time ... args;
+		addr.sendClumpedBundles(time, *args);
+	}
+}
+
+// this is probably no longer needed
+LocalNetAddr : NetAddr {
+	var <alternateNames;
+
+	*new { arg hostname = "127.0.0.1", port=0;
+		^super.new(hostname, port).init;
+	}
+
+	init {
+		alternateNames = Set.new;
+		if(thisProcess.platform.name == \osx, { // should add for other platforms as well
+			["en0", "en1"].do({|interface|
+				var hostname = "ipconfig getifaddr %".format(interface).unixCmdGetStdOut;
+				if(hostname.size > 0, {alternateNames.add(hostname)});
+			});
+		});
+	}
+
+	addName {|name| alternateNames.add(name); }
+
+	== {|that| ^(super == that) || (alternateNames.includesEqual(that.hostName) && (that.port == this.port)) }
+
 }
 
 AddrBook {
@@ -43,13 +85,8 @@ AddrBook {
 
 	init { dict = IdentityDictionary.new; }
 
+	// maybe don't need this anymore
 	send {|name ...msg| dict[name].addr.sendMsg(*msg) }
-
-	sendAll {|...msg| dict.do({|peer| peer.addr.sendMsg(*msg); }); }
-
-	sendAllBundle {|time ...msg| dict.do({|peer| peer.addr.sendBundle(time, *msg); }); }
-
-	sendExcluding {|name ...msg| dict.reject({|peer, peerName| peerName == name }).do({|peer| peer.addr.sendMsg(*msg); });}
 
 	add {|peer|
 		peer = peer.as(Peer);
@@ -76,9 +113,121 @@ AddrBook {
 
 	addrs { ^dict.values.collect({|peer| peer.addr }) }
 
-	peers { ^dict.values }
+	// methods to generate PeerGroups
 
-	onlinePeers { ^dict.reject({|peer| peer.online.not }).values }
+	onlinePeers { ^PeerGroup(\online, dict.reject({|peer| peer.online.not }).values) }
+
+	peers { ^PeerGroup(\all, dict.values) }
+
+	others { ^PeerGroup(\others, dict.values.reject({|peer| peer.name == me.name })) }
+
+	asAddrBook { }
+}
+
+// a Dict like class that provides a way to register Servers automatically between a number of Peers
+// the addrBook contains NetAddrs for Peers (sclang!) that will add servers
+// the dataspace is a shared dictionary of ips and ports
+// for 1 server per client use addMyServer, but other arrangements are possible
+// Todo: automate clientID allocations, allow for sharing of ServerOptions
+ServerRegistry {
+	var addrBook, clientID, options, oscPath, oscDataSpace, serverDict, myServer;
+	var dependancyFunc;
+
+	// maybe should have an encryptor as well
+	*new {|addrBook, clientID, options, oscPath = '/serverRegistry'|
+		^super.newCopyArgs(addrBook, clientID, options, oscPath).addDataSpace;
+	}
+
+	addMyServer {|server|
+		// avoid changed call for local case
+		oscDataSpace.removeDependant(dependancyFunc);
+		myServer = server ?? {Server.default};
+		this[addrBook.me.name] = myServer;
+		oscDataSpace.addDependant(dependancyFunc);
+	}
+
+	put {|name, server|
+		serverDict[name] = server;
+		oscDataSpace[name] = server !? {server.addr};
+	}
+
+	addDataSpace {
+		serverDict = IdentityDictionary.new;
+		oscDataSpace = OSCObjectSpace(addrBook, false, oscPath); // a dataspace of server ports
+		oscDataSpace.addDependant(dependancyFunc = {|changed, what, name, addr|
+			if(what == \val, {
+				// avoid loopback
+				if(addr.ip == "127.0.0.1", {addr = NetAddr(addrBook[name].addr.ip, addr.port)});
+
+				// could also have peers send the options for their servers
+				serverDict[name] = Server(name, addr, options, clientID);
+			});
+		});
+	}
+
+	at {|key| ^serverDict[key] }
+
+	keys { ^serverDict.keys }
+
+	values { ^serverDict.values }
+
+	asAddrBook { ^addrBook }
+}
+
+// PeerGroup is an Array that spoofs a NetAddr
+
+PeerGroup[slot] : Array {
+	var <>name;
+
+	*new {|name, peers| ^super.new.name_(name).addAll(peers) }
+
+	sendRaw { arg rawArray;
+		this.do({|peer| peer.addr.sendRaw(rawArray)});
+	}
+
+	sendMsg { arg ... args;
+		this.do({|peer| peer.addr.sendMsg(*args)});
+	}
+
+	sendBundle { arg time ... args;
+		this.do({|peer| peer.addr.sendBundle(time, *args)});
+	}
+
+	sendClumpedBundles { arg time ... args;
+		this.do({|peer| peer.addr.sendClumpedBundles(time, *args)});
+	}
+
+	printOn { arg stream;
+		if (stream.atLimit, { ^this });
+		stream << "PeerGroup[ " ;
+		this.printItemsOn(stream);
+		stream << " ]" ;
+	}
+}
+
+// Syncs groups between Peers
+// addrDict could be any dictionary like object that understands the asAddrBook method, so probably an AddrBook or a ServerRegistry
+// it translates the groups keys into a PeerGroup for sending
+PeerGroupManager {
+	var <addrDict, dataSpace;
+
+	*new {|addrDict, oscPath = \groupsDataSpace|
+		^super.newCopyArgs(addrDict).init(oscPath);
+	}
+
+	init { |oscPath| dataSpace = OSCObjectSpace(addrDict, false, oscPath);  dataSpace.addDependant(this); }
+
+	add { |groupname, names| dataSpace.put(groupname, names);  }
+
+	remove { |groupname| dataSpace.put(groupname, nil); }
+
+	at {|groupname| ^PeerGroup(groupname, this.resolve(groupname)); }
+
+	keysAt {|groupname| ^dataSpace[groupname] }
+
+	resolve {|groupname| ^dataSpace[groupname].collect({|name| addrDict[name]}) }
+
+	update { |… args| this.changed(args) } // register dependants to observe changes in groups
 }
 
 // who's there?
