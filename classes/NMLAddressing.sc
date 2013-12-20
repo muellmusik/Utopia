@@ -153,7 +153,7 @@ ServerRegistry {
 		oscDataSpace.addDependant(dependancyFunc = {|changed, what, name, addr|
 			if(what == \val, {
 				// avoid loopback
-				if(addr.ip == "127.0.0.1", {addr.ip = addrBook[name].addr.ip});
+				if(addr.ip == "127.0.0.1", {addr = NetAddr(addrBook[name].addr.ip, addr.port)});
 
 				// could also have peers send the options for their servers
 				serverDict[name] = Server(name, addr, options, clientID);
