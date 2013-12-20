@@ -111,15 +111,11 @@ AddrBook {
 
 	addrs { ^dict.values.collect({|peer| peer.addr }) }
 
-	peers { ^dict.values }
+	onlinePeers { ^PeerGroup(\online, dict.reject({|peer| peer.online.not }).values) }
 
-	onlinePeers { ^dict.reject({|peer| peer.online.not }).values }
+	peers { ^PeerGroup(\all, dict.values) }
 
-	asPeerGroup { ^PeerGroup(\all, this.peers) }
-
-	asOthersPeerGroup {
-		^PeerGroup(\others, this.peers.reject({|peer| peer.name == me.name }))
-	}
+	others { ^PeerGroup(\others, dict.values.reject({|peer| peer.name == me.name })) }
 
 	asAddrBook { }
 }
