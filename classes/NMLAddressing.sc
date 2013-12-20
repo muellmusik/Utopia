@@ -124,9 +124,10 @@ AddrBook {
 // the addrBook contains NetAddrs for Peers (sclang!) that will add servers
 // the dataspace is a shared dictionary of ips and ports
 // for 1 server per client use addMyServer, but other arrangements are possible
-// Todo: automate clientID allocations
+// Todo: automate clientID allocations, allow for sharing of ServerOptions
 ServerRegistry {
 	var addrBook, clientID, options, oscPath, oscDataSpace, serverDict, myServer;
+	var dependancyFunc;
 
 	// maybe should have an encryptor as well
 	*new {|addrBook, clientID, options, oscPath = '/serverRegistry'|
@@ -139,17 +140,23 @@ ServerRegistry {
 	}
 
 	put {|name, server|
+		// avoid changed call for local case
+		oscDataSpace.removeDependant(dependancyFunc);
 		serverDict[name] = server;
-		oscDataSpace[name] = server !? {[myServer.addr.ip, myServer.addr.port]};
+		oscDataSpace[name] = server !? {server.addr};
+		oscDataSpace.addDependant(dependancyFunc);
 	}
 
 	addDataSpace {
 		serverDict = IdentityDictionary.new;
 		oscDataSpace = OSCObjectSpace(addrBook, false, oscPath); // a dataspace of server ports
-		oscDataSpace.addDependant({|changed, what, name, vals|
+		oscDataSpace.addDependant(dependancyFunc = {|changed, what, name, addr|
 			if(what == \val, {
+				// avoid loopback
+				if(addr.ip == "127.0.0.1", {addr.ip = addrBook[name].addr.ip});
+
 				// could also have peers send the options for their servers
-				serverDict[name] = Server(name, NetAddr(vals[0], vals[1]), options, clientID);
+				serverDict[name] = Server(name, addr, options, clientID);
 			});
 		});
 	}
