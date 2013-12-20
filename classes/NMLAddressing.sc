@@ -115,14 +115,19 @@ AddrBook {
 
 	onlinePeers { ^dict.reject({|peer| peer.online.not }).values }
 
-	asPeerGroup { ^AllPeerGroup(this) }
+	asPeerGroup { ^PeerGroup(\all, this.peers) }
 
-	asOthersPeerGroup { ^AllNotMePeerGroup(this) }
+	asOthersPeerGroup {
+		^PeerGroup(\others, this.peers.reject({|peer| peer.name == me.name }))
+	}
 
 	asAddrBook { }
 }
 
 // a Dict like class that provides a way to register Servers automatically between a number of Peers
+// the addrBook contains NetAddrs for Peers (sclang!) that will add servers
+// the dataspace is a shared dictionary of servers
+// right now takes ip from sender, but shouldn't
 ServerRegistry {
 	var addrBook, myServer, options, oscPath, oscDataSpace, serverDict;
 
@@ -153,61 +158,41 @@ ServerRegistry {
 	asAddrBook { ^addrBook }
 }
 
-AbstractPeerGroup {
+// PeerGroup is an Array that spoofs a NetAddr
+
+PeerGroup[slot] : Array {
+	var <>name;
+
+	*new {|name, peers| ^super.new.name_(name).addAll(peers) }
 
 	sendRaw { arg rawArray;
-		this.targetCollection.do({|peer| peer.addr.sendRaw(rawArray)});
+		this.do({|peer| peer.addr.sendRaw(rawArray)});
 	}
 
 	sendMsg { arg ... args;
-		this.targetCollection.do({|peer| peer.addr.sendMsg(*args)});
+		this.do({|peer| peer.addr.sendMsg(*args)});
 	}
 
 	sendBundle { arg time ... args;
-		this.targetCollection.do({|peer| peer.addr.sendBundle(time, *args)});
+		this.do({|peer| peer.addr.sendBundle(time, *args)});
 	}
 
 	sendClumpedBundles { arg time ... args;
-		this.targetCollection.do({|peer| peer.addr.sendClumpedBundles(time, *args)});
+		this.do({|peer| peer.addr.sendClumpedBundles(time, *args)});
 	}
 
-	// subclasses resolve sets of Peers or NetAddrs here
-	targetCollection { this.subclassResponsibility(thisMethod); }
-}
-
-// this doesn't work with a regular dict!
-AllPeerGroup : AbstractPeerGroup {
-	var addrDict;
-
-	*new {|addrDict| ^super.newCopyArgs(addrDict); }
-
-	targetCollection { ^addrDict.peers }
-}
-
-// this doesn't work with a regular dict!
-AllNotMePeerGroup : AbstractPeerGroup {
-	var addrDict;
-
-	*new {|addrDict| ^super.newCopyArgs(addrDict); }
-
-	targetCollection { ^addrDict.peers.reject({|peer| peer.name == addrDict.me.name }) }
-}
-
-
-// PeerGroup spoofs a NetAddr
-// a PeerGroup's GroupManager will keep the group synced
-// it is essentially a proxy for a group of Peers or Servers
-PeerGroup {
-	var <name, manager;
-
-	*new {|name, manager| ^super.newCopyArgs(name, manager) }
-
-	targetCollection { ^manager.resolve(name) }
+	printOn { arg stream;
+		if (stream.atLimit, { ^this });
+		stream << "PeerGroup[ " ;
+		this.printItemsOn(stream);
+		stream << " ]" ;
+	}
 }
 
 // addrDict could be any dictionary like object that understands the asAddrBook method, so probably an AddrBook or a ServerRegistry
-GroupManager {
-	var <addrDict, <dataSpace;
+// it translates the groups keys into a PeerGroup for sending
+PeerGroupManager {
+	var <addrDict, dataSpace;
 
 	*new {|addrDict, oscPath = \groupsDataSpace|
 		^super.newCopyArgs(addrDict).init(oscPath);
@@ -222,7 +207,9 @@ GroupManager {
 	// not sure about this
 	// syntactically nice but maybe bad not to support put
 	// Anyway, this allows lazy resolution
-	at {|groupname| ^PeerGroup(groupname, this); }
+	at {|groupname| ^PeerGroup(groupname, this.resolve(groupname)); }
+
+	keysAt {|groupname| ^dataSpace[groupname] }
 
 	resolve {|groupname| ^dataSpace[groupname].collect({|name| addrDict[name]}) }
 
