@@ -124,7 +124,7 @@ BeaconClock : TempoClock {
 		compareDict = IdentityDictionary.new;
 		beaconOSCFunc = OSCFunc({|msg, time, addr|
 			var name, count, numPeers;
-			if(addrBook.addrs.includesEqual(addr), {
+			if(addrBook.includesMatchedAddr(addr), {
 				name = msg[1];
 				count = msg[2];
 				numPeers = msg[3];
@@ -141,7 +141,7 @@ BeaconClock : TempoClock {
 			//\foo.postln;
 			//msg.postln;
 			key = msg[1];
-			if(addrBook.addrs.includesEqual(addr), {
+			if(addrBook.includesMatchedAddr(addr), {
 				if(compareDict[key].notNil, { // the second if is required at the moment to allow testing on the same machine
 					tempo = msg[2];
 					beats = msg[3];

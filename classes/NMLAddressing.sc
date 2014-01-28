@@ -79,6 +79,11 @@ AddrBook {
 	peers { ^dict.values }
 
 	onlinePeers { ^dict.reject({|peer| peer.online.not }).values }
+
+	// uses match so variant local addresses work
+	includesMatchedAddr {|addr|
+		^dict.values.any({|peer| addr.matches(peer.addr) });
+	}
 }
 
 // who's there?
