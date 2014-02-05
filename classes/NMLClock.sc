@@ -97,6 +97,7 @@ BeaconClock : TempoClock {
 	var addrBook, beaconOSCFunc, compareOSCFunc, oscPath, compareDict;
 
 	*new { |addrBook, tempo, beats, seconds, queueSize=256, oscPath = '/beaconClock'|
+		if(addrBook.isNil, { "BeaconClock cannot work with nil AddrBook!".throw });
 		^super.new(tempo, beats, seconds, queueSize).setVars(addrBook, oscPath).makeOSCFuncs.startBeacons;
 	}
 
