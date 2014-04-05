@@ -106,11 +106,11 @@ SynthDescRelay {
 	}
 
 	updateFromLib {|what ...moreArgs|
+		var desc, def;
 		switch(what,
 			\synthDescAdded, {
 				// If we've just received one from somebody else, don't let that trigger another send and a never ending loop
 				if(justAddedRemote.not, {
-					var desc, def;
 					desc = moreArgs[0];
 					if(desc.isKindOf(SynthDesc), { // check for safety
 						def = desc.def;
@@ -186,12 +186,11 @@ OSCDataSpace : AbstractOSCDataSpace {
 	updatePeers {|key, value| addrBook.sendExcluding(addrBook.me.name, oscPath, key, value); }
 
 	sync {|addr, period = 0.3, timeout = inf|
-		var syncAddr, started, waiting = true;
+		var syncAddr, started, waiting = true, peer;
 		{
 			started = thisThread.seconds;
 			while({waiting && (thisThread.seconds - started < timeout)}, {
 				syncAddr = addr ?? {
-					var peer;
 					peer = addrBook.peers.reject({|peer| peer == addrBook.me }).detect({|peer| peer.online });
 					peer.notNil.if({peer.addr}, nil);
 				}; // look for the first online one who's not me
@@ -257,12 +256,11 @@ OSCObjectSpace : AbstractOSCDataSpace {
 	}
 
 	sync {|addr, period = 0.3, timeout = inf|
-		var syncAddr, started, waiting = true;
+		var syncAddr, started, waiting = true, peer;
 		{
 			started = thisThread.seconds;
 			while({waiting && (thisThread.seconds - started < timeout)}, {
 				syncAddr = addr ?? {
-					var peer;
 					peer = addrBook.peers.reject({|peer| peer == addrBook.me }).detect({|peer| peer.online });
 					peer.notNil.if({peer.addr}, nil);
 				}; // look for the first online one who's not me
