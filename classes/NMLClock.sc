@@ -167,15 +167,23 @@ BeaconClock : TempoClock {
 		}, oscPath ++ '-compare');
 	}
 
-	calcTempoAndBeats {|replies, beaconTime|
-		var newTempo, newBeats;
+	// so actually here we need to just compare the difference between our old beats
+	// and the 'correct' beats at beacon time and add that
+	// if we discard any compares that were incomplete when a tempo change occurred
+	// this should be sufficient
+	calcTempoAndBeats {|dict|
+		var replies, beaconTime;
+		var newTempo, newBeats, diff;
+		replies = dict[\replies];
+		beaconTime = dict[\beaconTime];
 		replies = replies.flop;
 		// just average for now
 		// could do other things like take latest, or add
 		newTempo = replies[0].mean;
-		newBeats = replies[1].maxItem + (Main.elapsedTime - beaconTime * newTempo);
+		newBeats = replies[1].maxItem;
 		//"% newTempo: % newBeats: %\n".postf(addrBook.me.name, newTempo, newBeats);
 		this.tempo_(newTempo);
-		this.beats_(newBeats);
+		// add any difference to current logical time
+		this.beats_(newBeats - dict[\myBeats] + this.beats);
 	}
 }
