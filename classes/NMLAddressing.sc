@@ -88,7 +88,7 @@ AddrBook {
 
 // who's there?
 Hail {
-	var <addrBook, period, oscPath, authenticator, broadcastAddr, me, inOSCFunc, lastResponses;
+	var <addrBook, period, oscPath, authenticator, broadcastAddr, me, inOSCFunc, outOSCFunc, lastResponses;
 
 	*new { |addrBook, period = 1.0, me, authenticator, oscPath = '/hail', broadcastAddr|
 		addrBook = addrBook ?? { AddrBook.new };
@@ -108,24 +108,38 @@ Hail {
 	makeOSCFuncs {
 		var replyPath;
 		replyPath = (oscPath ++ "-reply").asSymbol;
+		// add both on receiving a hail, and on receiving a reply
+		// this makes discovery more robust when there're multiple interfaces
 		inOSCFunc = OSCFunc({|msg, time, addr|
-			var name, peer;
+			var name;
 			name = msg[1];
-			if(lastResponses[name].isNil, {
-				peer = Peer(name, addr);
-				authenticator.authenticate(peer, {
-					addrBook.add(peer);
-					addrBook[name].online = true;
-					lastResponses[name] = time;
-				});
-			}, {
-				addrBook[name].online = true;
-				lastResponses[name] = time;
-			});
+			this.updateForAddr(name, addr, time);
+		}, replyPath, recvPort: addrBook.me.addr.port).fix;
+
+		outOSCFunc = OSCFunc({|msg, time, addr|
+			var name;
+			name = msg[1];
+			this.updateForAddr(name, addr, time);
+			addr.sendMsg(replyPath, me.name);
 		}, oscPath, recvPort: addrBook.me.addr.port).fix;
 	}
 
-	free { inOSCFunc.free; }
+	updateForAddr {|name, addr, time|
+		var peer;
+		if(lastResponses[name].isNil, {
+			peer = Peer(name, addr);
+			authenticator.authenticate(peer, {
+				addrBook.add(peer);
+				addrBook[name].online = true;
+				lastResponses[name] = time;
+			});
+		}, {
+			addrBook[name].online = true;
+			lastResponses[name] = time;
+		});
+	}
+
+	free { inOSCFunc.free; outOSCFunc.free; }
 
 	hailingSignal {
 		NetAddr.broadcastFlag = true;
