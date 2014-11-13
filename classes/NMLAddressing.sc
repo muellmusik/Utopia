@@ -88,9 +88,8 @@ AddrBook {
 
 // who's there?
 Hail {
-	var <addrBook, period, oscPath, authenticator, me, inOSCFunc, outOSCFunc, lastResponses;
+	var <addrBook, period, oscPath, authenticator, me, inOSCFunc, lastResponses;
 
-	*new { |addrBook, period = 1.0, me, authenticator, oscPath = '/hail'|
 		addrBook = addrBook ?? { AddrBook.new };
 		^super.newCopyArgs(addrBook, period, oscPath, authenticator).init(me);
 	}
@@ -122,21 +121,17 @@ Hail {
 				addrBook[name].online = true;
 				lastResponses[name] = time;
 			});
-		}, replyPath, recvPort: addrBook.me.addr.port).fix;
-
-		outOSCFunc = OSCFunc({|msg, time, addr|
-			addr.sendMsg(replyPath, me.name);
 		}, oscPath, recvPort: addrBook.me.addr.port).fix;
 	}
 
-	free { inOSCFunc.free; outOSCFunc.free; }
+	free { inOSCFunc.free; }
 
 	hailingSignal {
 		var broadcastAddr;
 		NetAddr.broadcastFlag = true;
 		broadcastAddr = NMLNetAddrMP("255.255.255.255", 57120 + (0..7));
 		SystemClock.sched(0, {
-			broadcastAddr.sendMsg(oscPath);
+			broadcastAddr.sendMsg(oscPath, me.name);
 			if(period.notNil, { this.checkOnline; });
 			period;
 		});
