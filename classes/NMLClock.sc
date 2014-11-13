@@ -90,9 +90,17 @@ ConductorClock {
 
 /// Pseudo Reference Broadcast Synchronisation Clock
 /// These do not require a common timebase, and are self converging
-/// However, you probably need at least three participants for this to work properly
+/// However, works better with at least three participants, as then you don't need
+/// to sync to your own Beacons
 
 /// this needs to keep track of which is last beacon
+// should this have different behaviour when 'synced' or 'not synced'
+
+// if we change the tempo in the middle of a compare, we should discard it.
+// Could we have one central Beacon for all clocks to follow?
+
+// instead of counting replies, we could include a list of names to expect a replie from
+
 BeaconClock : TempoClock {
 	var addrBook, beaconOSCFunc, compareOSCFunc, oscPath, compareDict;
 
