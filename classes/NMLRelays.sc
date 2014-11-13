@@ -16,7 +16,7 @@ CodeRelay {
 			if (private or: { onlyWorkingCode and: func.isNil }) {
 				"dont send";
 			} {
-				addrBook.sendAll(oscPath, addrBook.me.name, encryptor.encryptText(code));
+				addrBook.peers.sendMsg(oscPath, addrBook.me.name, encryptor.encryptText(code));
 			};
 		} };
 		interpreter = thisProcess.interpreter;
@@ -128,7 +128,7 @@ AbstractOSCDataSpace {
 	var addrBook, oscPath, oscFunc, syncRecOSCFunc, syncRequestOSCFunc, dict;
 
 	init {|argAddrBook, argOSCPath|
-		addrBook = argAddrBook;
+		addrBook = argAddrBook.asAddrBook;
 		oscPath = argOSCPath;
 		dict = IdentityDictionary.new;
 		this.makeSyncRequestOSCFunc;
@@ -183,7 +183,7 @@ OSCDataSpace : AbstractOSCDataSpace {
 
 	getPairs { ^dict.getPairs }
 
-	updatePeers {|key, value| addrBook.sendExcluding(addrBook.me.name, oscPath, key, value); }
+	updatePeers {|key, value| addrBook.others.sendMsg(oscPath, key, value); }
 
 	sync {|addr, period = 0.3, timeout = inf|
 		var syncAddr, started, waiting = true, peer;
@@ -252,7 +252,7 @@ OSCObjectSpace : AbstractOSCDataSpace {
 	getPairs { ^dict.asSortedArray.collect({|pair| [pair[0], encryptor.encryptBytes(pair[1].asBinaryArchive)]}).flatten }
 
 	updatePeers {|key, value|
-		addrBook.sendExcluding(addrBook.me.name, oscPath, key, encryptor.encryptBytes(value.asBinaryArchive));
+			addrBook.others.sendMsg(oscPath, key, encryptor.encryptBytes(value.asBinaryArchive));
 	}
 
 	sync {|addr, period = 0.3, timeout = inf|
