@@ -1,10 +1,13 @@
-~clock = BeaconClock(~addrBook);
+~clock = BeaconClock(~addrBook).permanent_(true);
+~clock = TempoClock.new;
 
 Pbind(\freq, rrand(440, 880)).play(~clock, quant: 1);
 
 Pbind(\freq, Pfunc({"beats: % tempo: %\n".postf(~clock.beats, ~clock.tempo); rrand(440, 1200) })).play(~clock, quant: 1);
 
-~clock.tempo = 11
+~clock.tempo = 1
+~clock.setGlobalTempo(3, 90)
+~clock.setTempoAtSec(3, 10);
 
 (
 SynthDef(\click, {

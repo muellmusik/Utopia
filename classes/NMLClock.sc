@@ -102,7 +102,7 @@ ConductorClock {
 // instead of counting replies, we could include a list of names to expect a replie from
 
 BeaconClock : TempoClock {
-	var addrBook, beaconOSCFunc, compareOSCFunc, oscPath, compareDict;
+	var addrBook, beaconOSCFunc, compareOSCFunc, tempoOSCFunc, oscPath, compareDict, broadcastAddr;
 
 	*new { |addrBook, tempo, beats, seconds, queueSize=256, oscPath = '/beaconClock'|
 		if(addrBook.isNil, { "BeaconClock cannot work with nil AddrBook!".throw });
@@ -112,14 +112,14 @@ BeaconClock : TempoClock {
 	setVars {|argAddrBook, argOSCPath| addrBook = argAddrBook; oscPath = argOSCPath; }
 
 	startBeacons {
-		var broadcastAddr, count = 0, myName, numReplies;
+		var count = 0, myName, numReplies;
 		// unusually we'll use broadcast here to avoid variations in send time
 		NetAddr.broadcastFlag = true;
 		broadcastAddr = NMLNetAddrMP("255.255.255.255", 57120 + (0..7));
 		myName = addrBook.me.name;
 		SystemClock.sched(rrand(0, 0.1) * addrBook.onlinePeers.size, { // what clock should this be on? Should it be permanent?
 			//(myName ++ "sending Beacon").postln;
-			// number of replies to expect
+			// number of replies each Peer receiving the Beacon should expect
 			numReplies = addrBook.onlinePeers.size;
 			// only listen to my own beacons if I need to
 			if(numReplies > 2, {numReplies = numReplies -1});
@@ -131,16 +131,27 @@ BeaconClock : TempoClock {
 
 	makeOSCFuncs {
 		compareDict = IdentityDictionary.new;
+
+		// time here is elapsedTime when the processOSCPacket is called
+		// since if may need to wait on the lang mutex this could be late in 3.6
+		// tried to fix this in 3.7, or at least remove the lang contention
+		// beats is logical time
+		// so when the OSCFunc is called we first check the difference between
+		// received time and now, and then recalc our beats for then
+
 		beaconOSCFunc = OSCFunc({|msg, time, addr|
-			var name, count, numPeers;
+			var name, count, numReplies, myBeats;
 			if(addrBook.includesMatchedAddr(addr), {
 				name = msg[1];
 				count = msg[2];
-				numPeers = msg[3];
-				if(name != addrBook.me.name || (numPeers < 3), { // ignore my own beacons if possible
+				numReplies = msg[3];
+				if(name != addrBook.me.name || (numReplies < 3 && (numReplies > 0)), { // ignore my own beacons if possible
 					//(addrBook.me.name ++ "received Beacon").postln;
-					compareDict[(name ++ count).asSymbol] = IdentityDictionary[\numPeers -> numPeers, \replies->Array.new(numPeers), \beaconTime->time];
-					addrBook.sendExcluding(name, oscPath ++ '-compare', name ++ count, this.tempo, this.beats);
+					myBeats = this.secs2beats(time);
+					compareDict[(name ++ count).asSymbol] = IdentityDictionary[\numReplies -> numReplies, \replies->Array.new(numReplies - 1), \beaconTime->time, \myBeats->myBeats, \myTempo->this.tempo ];
+
+					// !!!! this needs to not send to me in most cases
+					addrBook.sendExcluding(name, oscPath ++ '-compare', name ++ count, this.tempo, myBeats);
 				});
 			}, {"BeaconClock received beacon from unknown address: %\n".format(addr).warn;});
 		}, oscPath);
@@ -158,13 +169,33 @@ BeaconClock : TempoClock {
 					replies = compareDict[key][\replies];
 					replies.add([tempo, beats]);
 					//(addrBook.me.name ++ "received compare; replies: %\n").postf(replies);
-					if(replies.size == compareDict[key][\numPeers], {
-						this.calcTempoAndBeats(replies, compareDict[key][\beaconTime]);
+					if(replies.size == compareDict[key][\numReplies], {
+						this.calcTempoAndBeats(compareDict[key]);
 						compareDict[key] = nil; // let if be GC'd
 					});
 				});
 			}, {"BeaconClock received compare message from unknown address: %\n".format(addr).warn;});
 		}, oscPath ++ '-compare');
+
+		tempoOSCFunc = OSCFunc({|msg, time, addr|
+			var tempo, beats, replies;
+			tempo = msg[1];
+			beats = msg[2];
+			//"tempo: % beat: %\n".postf(tempo, beats);
+			if(addrBook.includesMatchedAddr(addr), {
+				// if the message is late, do it *now*
+				if(beats < this.beats, {
+					this.tempo = tempo
+				}, {
+					this.schedAbs(beats, {this.tempo = tempo});
+				});
+			}, {"BeaconClock received global tempo message from unknown address: %\n".format(addr).warn;});
+		}, oscPath ++ '-globalTempo');
+	}
+
+	setGlobalTempo {|tempo, beat|
+		beat = beat ?? { this.nextTimeOnGrid };
+		broadcastAddr.sendMsg(oscPath ++ '-globalTempo', tempo, beat);
 	}
 
 	// so actually here we need to just compare the difference between our old beats
