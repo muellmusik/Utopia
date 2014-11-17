@@ -37,6 +37,7 @@ RepPeer : Peer {
 
 RepHail : Hail {
 	classvar <peerClass;
+	var outOSCFunc;
 	var <broadcastAddr, <skipJack;
 	var <>numBroadcastPorts = 4;
 	var <>gracePeriods = 5;

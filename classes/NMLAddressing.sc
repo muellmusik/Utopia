@@ -218,11 +218,11 @@ PeerGroupManager {
 
 // who's there?
 Hail {
-	var <addrBook, period, oscPath, authenticator, me, inOSCFunc, outOSCFunc, lastResponses;
+	var <addrBook, period, oscPath, authenticator, broadcastAddr, me, inOSCFunc, outOSCFunc, lastResponses;
 
-	*new { |addrBook, period = 1.0, me, authenticator, oscPath = '/hail'|
+	*new { |addrBook, period = 1.0, me, authenticator, oscPath = '/hail', broadcastAddr|
 		addrBook = addrBook ?? { AddrBook.new };
-		^super.newCopyArgs(addrBook, period, oscPath, authenticator).init(me);
+		^super.newCopyArgs(addrBook, period, oscPath, authenticator, broadcastAddr).init(me);
 	}
 
 	// not totally sure about this me business...
@@ -238,35 +238,44 @@ Hail {
 	makeOSCFuncs {
 		var replyPath;
 		replyPath = (oscPath ++ "-reply").asSymbol;
+		// add both on receiving a hail, and on receiving a reply
+		// this makes discovery more robust when there're multiple interfaces
 		inOSCFunc = OSCFunc({|msg, time, addr|
-			var name, peer;
+			var name;
 			name = msg[1];
-			if(lastResponses[name].isNil, {
-				peer = Peer(name, addr);
-				authenticator.authenticate(peer, {
-					addrBook.add(peer);
-					addrBook[name].online = true;
-					lastResponses[name] = time;
-				});
-			}, {
-				addrBook[name].online = true;
-				lastResponses[name] = time;
-			});
+			this.updateForAddr(name, addr, time);
 		}, replyPath, recvPort: addrBook.me.addr.port).fix;
 
 		outOSCFunc = OSCFunc({|msg, time, addr|
+			var name;
+			name = msg[1];
+			this.updateForAddr(name, addr, time);
 			addr.sendMsg(replyPath, me.name);
 		}, oscPath, recvPort: addrBook.me.addr.port).fix;
+	}
+
+	updateForAddr {|name, addr, time|
+		var peer;
+		if(lastResponses[name].isNil, {
+			peer = Peer(name, addr);
+			authenticator.authenticate(peer, {
+				addrBook.add(peer);
+				addrBook[name].online = true;
+				lastResponses[name] = time;
+			});
+		}, {
+			addrBook[name].online = true;
+			lastResponses[name] = time;
+		});
 	}
 
 	free { inOSCFunc.free; outOSCFunc.free; }
 
 	hailingSignal {
-		var broadcastAddr;
 		NetAddr.broadcastFlag = true;
-		broadcastAddr = NMLNetAddrMP("255.255.255.255", 57120 + (0..7));
+		broadcastAddr = broadcastAddr ?? {NMLNetAddrMP("255.255.255.255", 57120 + (0..7))};
 		SystemClock.sched(0, {
-			broadcastAddr.sendMsg(oscPath);
+			broadcastAddr.sendMsg(oscPath, me.name);
 			if(period.notNil, { this.checkOnline; });
 			period;
 		});
@@ -369,12 +378,12 @@ Registrar {
 }
 
 Registrant {
-	var <addrBook, registrarAddr, authenticator, oscPath, me, addOSCFunc, removeOSCFunc, onlineOSCFunc, pingOSCFunc, pinging;
+	var <addrBook, registrarAddr, authenticator, oscPath, broadcastAddr, me, addOSCFunc, removeOSCFunc, onlineOSCFunc, pingOSCFunc, pinging;
 
 	// we pass an authenticator here but maybe it's unnecessary. It's simply there to respond, not challenge in this case.
-	*new { |addrBook, me, registrarAddr, authenticator, oscPath = '/register'|
+	*new { |addrBook, me, registrarAddr, authenticator, oscPath = '/register', broadcastAddr|
 		addrBook = addrBook ?? { AddrBook.new };
-		^super.newCopyArgs(addrBook, registrarAddr, authenticator, oscPath).init(me);
+		^super.newCopyArgs(addrBook, registrarAddr, authenticator, oscPath, broadcastAddr).init(me);
 	}
 
 	// not totally sure about this me business...
@@ -426,10 +435,10 @@ Registrant {
 
 	// automatically search for registrar...
 	pingRegistrar {
-		var broadcastAddr, registrarPingOSCFunc;
+		var registrarPingOSCFunc;
 		pinging = true;
 		NetAddr.broadcastFlag = true;
-		broadcastAddr = NMLNetAddrMP("255.255.255.255", 57120 + (0..7));
+		broadcastAddr = broadcastAddr ?? { NMLNetAddrMP("255.255.255.255", 57120 + (0..7))};
 		registrarPingOSCFunc = OSCFunc({|msg, time, addr|
 			pinging = false;
 			registrarAddr = addr;
