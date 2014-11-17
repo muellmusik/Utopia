@@ -141,7 +141,7 @@ BeaconClock : TempoClock {
 
 		beaconOSCFunc = OSCFunc({|msg, time, addr|
 			var name, count, numReplies, myBeats;
-			if(addrBook.includesMatchedAddr(addr), {
+			if(addrBook.addrs.includesEqual(addr), {
 				name = msg[1];
 				count = msg[2];
 				numReplies = msg[3];
@@ -161,7 +161,7 @@ BeaconClock : TempoClock {
 			//\foo.postln;
 			//msg.postln;
 			key = msg[1];
-			if(addrBook.includesMatchedAddr(addr), {
+			if(addrBook.addrs.includesEqual(addr), {
 				if(compareDict[key].notNil, { // the second if is required at the moment to allow testing on the same machine
 					tempo = msg[2];
 					beats = msg[3];
@@ -182,7 +182,7 @@ BeaconClock : TempoClock {
 			tempo = msg[1];
 			beats = msg[2];
 			//"tempo: % beat: %\n".postf(tempo, beats);
-			if(addrBook.includesMatchedAddr(addr), {
+			if(addrBook.addrs.includesEqual(addr), {
 				// if the message is late, do it *now*
 				if(beats < this.beats, {
 					this.tempo = tempo
