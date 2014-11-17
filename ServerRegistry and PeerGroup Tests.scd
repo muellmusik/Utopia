@@ -1,4 +1,4 @@
-~reg = ServerRegistry(~addrBook, 0); // set an appropriate client ID
+~reg = ServerRegistry(~addrBook);
 ~reg.addMyServer;
 ~gm = PeerGroupManager(~reg, '/serverGroups');
 

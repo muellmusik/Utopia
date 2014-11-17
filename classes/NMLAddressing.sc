@@ -110,14 +110,14 @@ AddrBook {
 // the addrBook contains NetAddrs for Peers (sclang!) that will add servers
 // the dataspace is a shared dictionary of ips and ports
 // for 1 server per client use addMyServer, but other arrangements are possible
-// Todo: automate clientID allocations, allow for sharing of ServerOptions
+// Todo: allow for sharing of ServerOptions
 ServerRegistry {
-	var addrBook, clientID, options, oscPath, oscDataSpace, serverDict, myServer;
+	var addrBook, options, oscPath, oscDataSpace, serverDict, myServer;
 	var dependancyFunc;
 
 	// maybe should have an encryptor as well
-	*new {|addrBook, clientID, options, oscPath = '/serverRegistry'|
-		^super.newCopyArgs(addrBook, clientID, options, oscPath).addDataSpace;
+	*new {|addrBook, options, oscPath = '/serverRegistry'|
+		^super.newCopyArgs(addrBook, options, oscPath).addDataSpace;
 	}
 
 	addMyServer {|server|
@@ -142,7 +142,7 @@ ServerRegistry {
 				if(addr.ip == "127.0.0.1", {addr = NetAddr(addrBook[name].addr.ip, addr.port)});
 
 				// could also have peers send the options for their servers
-				serverDict[name] = Server(name, addr, options, clientID);
+				serverDict[name] = Server(name, addr, options);
 			});
 		});
 	}
