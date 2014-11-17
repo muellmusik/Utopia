@@ -103,6 +103,10 @@ AddrBook {
 
 	others { ^PeerGroup(\others, dict.values.reject({|peer| peer.name == me.name })) }
 
+	excluding {|name|
+		^PeerGroup(("excluding-" ++ name).asSymbol, dict.values.reject({|peer| peer.name == name }))
+	}
+
 	asAddrBook { }
 }
 
