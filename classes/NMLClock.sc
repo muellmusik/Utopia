@@ -103,6 +103,7 @@ ConductorClock {
 
 BeaconClock : TempoClock {
 	var addrBook, beaconOSCFunc, compareOSCFunc, tempoOSCFunc, oscPath, compareDict, broadcastAddr;
+	var fadeTask, fading=false;
 
 	*new { |addrBook, tempo, beats, seconds, queueSize=256, oscPath = '/beaconClock'|
 		if(addrBook.isNil, { "BeaconClock cannot work with nil AddrBook!".throw });
@@ -216,5 +217,37 @@ BeaconClock : TempoClock {
 		this.tempo_(newTempo);
 		// add any difference to current logical time
 		this.beats_(newBeats - dict[\myBeats] + this.beats);
+	}
+
+	// fade and warp tempo from the virtual gamelan project's SoftClock
+	// currently this is 'precise' but with latency,
+	// i.e. we set all Clock's tempi at dt in the
+	// future, so they should be as together as anything else it does
+	fadeTempo { arg newTempo, dur = 1.0, warp = \cos, clock, dt = 0.1, verbose = false;
+		var start = this.tempo, interpol;
+		warp = warp.asWarp;
+		if (warp.isKindOf(ExponentialWarp)) { warp.spec.minval_(0.01) };
+		if (fading) { fadeTask.stop };
+		fadeTask = Task {
+			fading = true;
+			"fadeTempo starts. going from: % to: %\n".postf(
+				start.round(0.001), newTempo.round(0.001));
+			(1 .. (dur / dt + 1).asInteger).normalize.do { |val|
+				interpol = blend(start, newTempo, warp.map(val));
+				this.setGlobalTempo(interpol, dt);
+				if (verbose) { "fadeTempo index: % tempo: %\n".postf(
+					val.round(0.001), interpol.round(0.001)) };
+				dt.value.wait;
+			};
+			fading = false;
+			"fadeTempo done. tempo was: % new tempo is: %\n".postf(
+				start.round(0.001), interpol.round(0.001));
+		};
+		clock = clock ? SystemClock;
+		fadeTask.play(clock);
+	}
+
+	warpTempo { arg frac, beats = 1.0, warp = \cos;
+		this.fadeTempo(frac * this.tempo, beats, warp, this)
 	}
 }

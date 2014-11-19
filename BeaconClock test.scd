@@ -7,7 +7,11 @@ Pbind(\freq, Pfunc({"beats: % tempo: %\n".postf(~clock.beats, ~clock.tempo); rra
 
 ~clock.tempo = 1
 ~clock.setGlobalTempo(3, 90)
-~clock.setTempoAtSec(3, 10);
+~clock.setGlobalTempo(3);
+
+~clock.fadeTempo(10, 3)
+
+~clock.warpTempo(2, 30)
 
 (
 SynthDef(\click, {
