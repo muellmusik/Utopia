@@ -250,4 +250,11 @@ BeaconClock : TempoClock {
 	warpTempo { arg frac, beats = 1.0, warp = \cos;
 		this.fadeTempo(frac * this.tempo, beats, warp, this)
 	}
+
+	permanent_{|bool|
+		beaconOSCFunc.permanent_(bool);
+		compareOSCFunc.permanent_(bool);
+		tempoOSCFunc.permanent_(bool);
+		super.permanent_(bool);
+	}
 }
