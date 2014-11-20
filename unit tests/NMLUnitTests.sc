@@ -1,3 +1,4 @@
+/*
 // tests locally...
 TestHail : UnitTest {
 	var peer1, addrBook1, hail1;
@@ -230,5 +231,5 @@ TestOSCObjectSpace : UnitTest {
 
 	}
 }
-
+*/
 	
