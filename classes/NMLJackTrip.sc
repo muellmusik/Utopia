@@ -13,13 +13,13 @@ jack_lsp lists available ports
 */
 
 UtopiaJackTrip {
-	var addrBook, numChannelsPerUser, disconnectClientsFromSystem, <bitRes;
+	var addrBook, numChannelsPerUser, disconnectClientsFromSystem, separateSends, <bitRes;
 	var myServers, myClients, addrs, portOffsets, numActivePings = 0;
 
 	classvar pathsInited = false, <>jacktripPath, <>jackconnectPath, <>jackdisconnectPath, pids;
 
-	*new {|addrBook, numChannelsPerUser = 1, disconnectClientsFromSystem = true, bitRes = 32|
-		^super.newCopyArgs(addrBook, numChannelsPerUser, disconnectClientsFromSystem, bitRes).init;
+	*new {|addrBook, numChannelsPerUser = 1, disconnectClientsFromSystem = true, separateSends = false, bitRes = 32|
+		^super.newCopyArgs(addrBook, numChannelsPerUser, disconnectClientsFromSystem, separateSends, bitRes).init;
 	}
 
 	*initPaths {
@@ -158,8 +158,10 @@ UtopiaJackTrip {
 
 		// sends
 		(myServers ++ myClients).do({|nickname, i|
+			var outputOffset;
+				outputOffset = if(separateSends, {i * numChannelsPerUser},{0});
 			numChannelsPerUser.do({|j|
-				"% scsynth:out% %:send_%".format(jackconnectPath, j+1, nickname, j+1).postln.systemCmd;
+				"% scsynth:out% %:send_%".format(jackconnectPath, j+1+outputOffset, nickname, j+1).postln.systemCmd;
 				0.2.wait;
 			});
 		});
