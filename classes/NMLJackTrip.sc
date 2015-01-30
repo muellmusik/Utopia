@@ -187,6 +187,12 @@ UtopiaJackTrip {
 		}, IdentityDictionary);
 	}
 
+	outputBusses {
+		^(myServers ++ myClients).collectAs({|nickname, i|
+			nickname -> Bus(\audio, i*numChannelsPerUser, numChannelsPerUser, Server.default);
+		}, IdentityDictionary);
+	}
+
 	*connect {|portA, portB|
 		pathsInited.not.if({
 			this.initPaths;
