@@ -141,18 +141,25 @@ BeaconClock : TempoClock {
 		// received time and now, and then recalc our beats for then
 
 		beaconOSCFunc = OSCFunc({|msg, time, addr|
-			var name, count, numReplies, myBeats;
+			var name, count, numReplies, myBeats, beaconKey;
 			if(addrBook.addrs.includesEqual(addr), {
 				name = msg[1];
 				count = msg[2];
 				numReplies = msg[3];
 				if(name != addrBook.me.name || (numReplies < 3 && (numReplies > 0)), { // ignore my own beacons if possible
 					//(addrBook.me.name ++ "received Beacon").postln;
+					beaconKey = (name ++ count).asSymbol;
 					myBeats = this.secs2beats(time);
-					compareDict[(name ++ count).asSymbol] = IdentityDictionary[\numReplies -> numReplies, \replies->Array.new(numReplies - 1), \beaconTime->time, \myBeats->myBeats, \myTempo->this.tempo ];
+					compareDict.clear; // we will only correct for latest beacon
+					compareDict.put(\beaconKey, beaconKey);
+					compareDict.put(\numReplies, numReplies);
+					compareDict.put(\replies, Array.new(numReplies - 1));
+					compareDict.put(\beaconTime, time);
+					compareDict.put(\myBeats, myBeats);
+					compareDict.put(\myTempo, this.tempo);
 
 					// !!!! this needs to not send to me in most cases
-					addrBook.sendExcluding(name, oscPath ++ '-compare', name ++ count, this.tempo, myBeats);
+					addrBook.sendExcluding(name, oscPath ++ '-compare', beaconKey, this.tempo, myBeats);
 				});
 			}, {"BeaconClock received beacon from unknown address: %\n".format(addr).warn;});
 		}, oscPath);
@@ -163,16 +170,15 @@ BeaconClock : TempoClock {
 			//msg.postln;
 			key = msg[1];
 			if(addrBook.addrs.includesEqual(addr), {
-				if(compareDict[key].notNil, { // the second if is required at the moment to allow testing on the same machine
+				if(compareDict[\beaconKey] == key, { // the second if is required at the moment to allow testing on the same machine
 					tempo = msg[2];
 					beats = msg[3];
 					//compareDict.postcs;
-					replies = compareDict[key][\replies];
+					replies = compareDict[\replies];
 					replies.add([tempo, beats]);
 					//(addrBook.me.name ++ "received compare; replies: %\n").postf(replies);
-					if(replies.size == compareDict[key][\numReplies], {
-						this.calcTempoAndBeats(compareDict[key]);
-						compareDict[key] = nil; // let if be GC'd
+					if(replies.size == compareDict[\numReplies], {
+						this.calcTempoAndBeats(compareDict);
 					});
 				});
 			}, {"BeaconClock received compare message from unknown address: %\n".format(addr).warn;});
