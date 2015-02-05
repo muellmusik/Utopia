@@ -211,6 +211,12 @@ BeaconClock : TempoClock {
 		broadcastAddr.sendMsg(globalTempoOSCpath, tempo, beat);
 	}
 
+	tempo_ {|newTempo|
+		// clear any compares in progress
+		compareDict.clear;
+		super.tempo_(newTempo);
+	}
+
 	// so actually here we need to just compare the difference between our old beats
 	// and the 'correct' beats at beacon time and add that
 	// if we discard any compares that were incomplete when a tempo change occurred
@@ -226,9 +232,10 @@ BeaconClock : TempoClock {
 		newTempo = replies[0].mean;
 		newBeats = replies[1].maxItem;
 		//"% newTempo: % newBeats: %\n".postf(addrBook.me.name, newTempo, newBeats);
-		this.tempo_(newTempo);
 		// add any difference to current logical time
-		this.beats_(newBeats - dict[\myBeats] + this.beats);
+		diff = newBeats - dict[\myBeats];
+		this.beats_(diff + this.beats);
+		this.tempo_(newTempo); // this also clears the dict
 	}
 
 	// fade and warp tempo from the virtual gamelan project's SoftClock
