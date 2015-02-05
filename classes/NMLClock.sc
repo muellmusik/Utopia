@@ -104,13 +104,19 @@ ConductorClock {
 BeaconClock : TempoClock {
 	var addrBook, beaconOSCFunc, compareOSCFunc, tempoOSCFunc, oscPath, compareDict, broadcastAddr;
 	var fadeTask, fading=false;
+	var compareOSCpath, globalTempoOSCpath;
 
 	*new { |addrBook, tempo, beats, seconds, queueSize=256, oscPath = '/beaconClock'|
 		if(addrBook.isNil, { "BeaconClock cannot work with nil AddrBook!".throw });
 		^super.new(tempo, beats, seconds, queueSize).setVars(addrBook, oscPath).makeOSCFuncs.startBeacons;
 	}
 
-	setVars {|argAddrBook, argOSCPath| addrBook = argAddrBook; oscPath = argOSCPath; }
+	setVars {|argAddrBook, argOSCPath|
+		addrBook = argAddrBook;
+		oscPath = argOSCPath;
+		compareOSCpath = (oscPath ++ '-compare').asSymbol;
+		globalTempoOSCpath = (oscPath ++ '-globalTempo').asSymbol;
+	}
 
 	startBeacons {
 		var count = 0, myName, numReplies;
@@ -159,7 +165,7 @@ BeaconClock : TempoClock {
 					compareDict.put(\myTempo, this.tempo);
 
 					// !!!! this needs to not send to me in most cases
-					addrBook.sendExcluding(name, oscPath ++ '-compare', beaconKey, this.tempo, myBeats);
+					addrBook.sendExcluding(name, compareOSCpath, beaconKey, this.tempo, myBeats);
 				});
 			}, {"BeaconClock received beacon from unknown address: %\n".format(addr).warn;});
 		}, oscPath);
@@ -182,7 +188,7 @@ BeaconClock : TempoClock {
 					});
 				});
 			}, {"BeaconClock received compare message from unknown address: %\n".format(addr).warn;});
-		}, oscPath ++ '-compare');
+		}, compareOSCpath);
 
 		tempoOSCFunc = OSCFunc({|msg, time, addr|
 			var tempo, beats, replies;
@@ -197,12 +203,12 @@ BeaconClock : TempoClock {
 					this.schedAbs(beats, {this.tempo = tempo});
 				});
 			}, {"BeaconClock received global tempo message from unknown address: %\n".format(addr).warn;});
-		}, oscPath ++ '-globalTempo');
+		}, globalTempoOSCpath);
 	}
 
 	setGlobalTempo {|tempo, beat|
 		beat = beat ?? { this.nextTimeOnGrid };
-		broadcastAddr.sendMsg(oscPath ++ '-globalTempo', tempo, beat);
+		broadcastAddr.sendMsg(globalTempoOSCpath, tempo, beat);
 	}
 
 	// so actually here we need to just compare the difference between our old beats
