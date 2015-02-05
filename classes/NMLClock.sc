@@ -149,12 +149,13 @@ BeaconClock : TempoClock {
 		// received time and now, and then recalc our beats for then
 
 		beaconOSCFunc = OSCFunc({|msg, time, addr|
-			var name, count, numReplies, myBeats, beaconKey;
+			var name, count, numReplies, myBeats, beaconKey, onlinePeers;
 			if(addrBook.addrs.includesEqual(addr), {
 				name = msg[1];
 				count = msg[2];
 				numReplies = msg[3];
-				if(name != addrBook.me.name || (numReplies < 3 && (numReplies > 0)), { // ignore my own beacons if possible
+				onlinePeers = addrBook.onlinePeers;
+				if((name != addrBook.me.name && numReplies == onlinePeers.size) || (numReplies < 3 && (numReplies > 0) && numReplies == onlinePeers.size), { // ignore my own beacons if possible
 					//(addrBook.me.name ++ "received Beacon").postln;
 					beaconKey = (name ++ count).asSymbol;
 					myBeats = this.secs2beats(time);
@@ -165,6 +166,7 @@ BeaconClock : TempoClock {
 					compareDict.put(\beaconTime, time);
 					compareDict.put(\myBeats, myBeats);
 					compareDict.put(\myTempo, this.tempo);
+					compareDict.put(\compareAddrs, onlinePeers.collect({|peer| peer.addr}));
 
 					// !!!! this needs to not send to me in most cases
 					addrBook.sendExcluding(name, compareOSCpath, beaconKey, this.tempo, myBeats);
@@ -178,7 +180,7 @@ BeaconClock : TempoClock {
 			//msg.postln;
 			key = msg[1];
 			if(addrBook.addrs.includesEqual(addr), {
-				if(compareDict[\beaconKey] == key, { // the second if is required at the moment to allow testing on the same machine
+				if(compareDict[\beaconKey] == key && {compareDict[\compareAddrs].includesEqual(addr)}, {
 					tempo = msg[2];
 					beats = msg[3];
 					//compareDict.postcs;
