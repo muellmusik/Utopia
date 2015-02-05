@@ -102,9 +102,10 @@ ConductorClock {
 // instead of counting replies, we could include a list of names to expect a replie from
 
 BeaconClock : TempoClock {
-	var addrBook, beaconOSCFunc, compareOSCFunc, tempoOSCFunc, oscPath, compareDict, broadcastAddr;
+	var addrBook, beaconOSCFunc, compareOSCFunc, tempoOSCFunc, clearOSCFunc;
+	var oscPath, compareDict, broadcastAddr;
+	var compareOSCpath, globalTempoOSCpath, globalClearOSCpath;
 	var fadeTask, fading=false;
-	var compareOSCpath, globalTempoOSCpath;
 
 	*new { |addrBook, tempo, beats, seconds, queueSize=256, oscPath = '/beaconClock'|
 		if(addrBook.isNil, { "BeaconClock cannot work with nil AddrBook!".throw });
@@ -116,6 +117,7 @@ BeaconClock : TempoClock {
 		oscPath = argOSCPath;
 		compareOSCpath = (oscPath ++ '-compare').asSymbol;
 		globalTempoOSCpath = (oscPath ++ '-globalTempo').asSymbol;
+		globalClearOSCpath = (oscPath ++ '-globalClear').asSymbol;
 	}
 
 	startBeacons {
@@ -204,11 +206,23 @@ BeaconClock : TempoClock {
 				});
 			}, {"BeaconClock received global tempo message from unknown address: %\n".format(addr).warn;});
 		}, globalTempoOSCpath);
+
+		clearOSCFunc = OSCFunc({|msg, time, addr|
+			var releaseNodes;
+			releaseNodes = msg[1].booleanValue;
+			if(addrBook.addrs.includesEqual(addr), {
+				this.clear(releaseNodes);
+			}, {"BeaconClock received global clear message from unknown address: %\n".format(addr).warn;});
+		}, globalClearOSCpath);
 	}
 
 	setGlobalTempo {|tempo, beat|
 		beat = beat ?? { this.nextTimeOnGrid };
 		broadcastAddr.sendMsg(globalTempoOSCpath, tempo, beat);
+	}
+
+	globalClear {|releaseNodes = true|
+		broadcastAddr.sendMsg(globalClearOSCpath, releaseNodes.binaryValue);
 	}
 
 	tempo_ {|newTempo|
@@ -274,6 +288,7 @@ BeaconClock : TempoClock {
 		beaconOSCFunc.permanent_(bool);
 		compareOSCFunc.permanent_(bool);
 		tempoOSCFunc.permanent_(bool);
+		clearOSCFunc.permanent_(bool);
 		super.permanent_(bool);
 	}
 }
