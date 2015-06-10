@@ -150,7 +150,7 @@ BeaconClock : TempoClock {
 
 		beaconOSCFunc = OSCFunc({|msg, time, addr|
 			var name, count, numReplies, myBeats, beaconKey, onlinePeers;
-			if(addrBook.addrs.includesEqual(addr), {
+			if(addrBook.addrs.includesEqual(addr) || {NetAddr.localAddr.matches(addr)}, {
 				name = msg[1];
 				count = msg[2];
 				numReplies = msg[3];
