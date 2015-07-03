@@ -24,6 +24,12 @@ Peer {
 
 	online_ {|bool| if(bool != online, { online = bool; this.changed(\online) }) }
 
+	// may be needed if a Peer has recompiled and has a new port
+	addr_ {|newAddr|
+		addr = newAddr;
+		this.changed(\addr);
+	}
+
 	== {|other|
 		^this.name == other.name && {this.addr.matches(other.addr)};
 	}
