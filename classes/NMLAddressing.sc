@@ -270,8 +270,21 @@ Hail {
 				lastResponses[name] = time;
 			});
 		}, {
-			addrBook[name].online = true;
-			lastResponses[name] = time;
+			peer = addrBook[name];
+			if(peer.addr.matches(addr).not, {
+				// this probably means the peer recompiled and
+				// has a different port
+				var testPeer = peer.copy.addr_(addr);
+				authenticator.authenticate(testPeer, {
+					peer.addr_(addr);
+					peer.online = true;
+					lastResponses[name] = time;
+					"Peer % rejoined the Utopia\n".postf(name);
+				});
+			}, {
+				peer.online = true;
+				lastResponses[name] = time;
+			});
 		});
 	}
 
@@ -327,6 +340,8 @@ Registrar {
 		registerOSCFunc = OSCFunc({|msg, time, addr|
 			var peer;
 			peer = this.makePeer(addr, msg[1]);
+			// reregistration only happens with authentication
+			// so we don't need to check here
 			authenticator.authenticate(peer, {
 				// tell everyone about the new arrival
 				addrBook.sendAll(oscPath ++ "-add", peer.name, addr.ip, addr.port);
@@ -407,8 +422,13 @@ Registrant {
 	addOSCFuncs {
 		addOSCFunc = OSCFunc({|msg, time, addr|
 			var peer;
-			peer = this.makePeer(*msg[1..]);
-			addrBook.add(peer);
+			if(addrBook[msg[1]].notNil, {
+				"Peer % rejoined the Utopia\n".postf(msg[1]);
+				addrBook[msg[1]].addr = addr;
+			}, {
+				peer = this.makePeer(*msg[1..]);
+				addrBook.add(peer);
+			});
 		}, oscPath ++ "-add", registrarAddr, recvPort: addrBook.me.addr.port).fix;
 
 		removeOSCFunc = OSCFunc({|msg, time, addr|
