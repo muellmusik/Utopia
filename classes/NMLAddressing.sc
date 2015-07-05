@@ -346,7 +346,7 @@ Registrar {
 				// tell everyone about the new arrival
 				addrBook.sendAll(oscPath ++ "-add", peer.name, addr.ip, addr.port);
 				// tell the new arrival about everyone
-				addrBook.peers.do({|peer|
+				addrBook.excluding(peer.name).do({|peer|
 					addr.sendMsg(oscPath ++ "-add", peer.name, peer.addr.ip, peer.addr.port);
 				});
 				addrBook.add(peer);
