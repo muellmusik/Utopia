@@ -19,7 +19,17 @@ Peer {
 	}
 
 	*defaultName {
-		^"whoami".unixCmdGetStdOut.replace("\n", "");
+		var cmd, name;
+		cmd = Platform.case(
+			    \osx,       { "id -un" },
+			    \linux,     { "id -un" },
+			    \windows,   { "echo %username%" },
+			{""}
+		);
+		name = cmd.unixCmdGetStdOut;
+		if(name.size == 0, { name ="hostname".unixCmdGetStdOut });
+		name = name.replace("\n", "");
+		^name;
 	}
 
 	online_ {|bool| if(bool != online, { online = bool; this.changed(\online) }) }
