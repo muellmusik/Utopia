@@ -424,7 +424,7 @@ Registrant {
 			var peer;
 			if(addrBook[msg[1]].notNil, {
 				"Peer % rejoined the Utopia\n".postf(msg[1]);
-				addrBook[msg[1]].addr = addr;
+				addrBook[msg[1]].addr = NetAddr(msg[2].asString, msg[3]);
 			}, {
 				peer = this.makePeer(*msg[1..]);
 				addrBook.add(peer);
