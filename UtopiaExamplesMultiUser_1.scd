@@ -24,7 +24,8 @@ and demonstrating Utopia modules.
 	}, Array)}.defer;
 });
 
-~addrBook.addMe(\adcxyz); // will automatically add you using your user name
+~addrBook.addMe; // will automatically add you using your user name
+//~addrBook.addMe(\adcxyz); // or specify one
 
 ~hail = Hail(~addrBook);
 
@@ -64,7 +65,7 @@ and demonstrating Utopia modules.
 ~chatter = Chatter(~addrBook);
 
 ~chatter.send("howdy");
-~chatter.sendPrivate(\mac, "Psst... howdy!"); // send only to \me2
+~chatter.sendPrivate(\mac, "Psst... howdy!"); // send only to \mac
 
 // make a GUI to see the results
 (
@@ -95,7 +96,7 @@ and demonstrating Utopia modules.
 \foo.postln;
 1 + 1;
 
-1 + eguyetwur;
+1 + eguyetwur; // code which doesn't work won't get sent, so others don't see your mistakes!
 
 // make a GUI to see the results
 (
@@ -136,47 +137,50 @@ and demonstrating Utopia modules.
 
 ~slave1.sched(1, {\foo.postln}); SystemClock.sched(1, {\bar.postln});
 
-Pbind(\degree, Pseq((1..4), inf)).play(~slave1, quant: 1); Pbind(\degree, Pseq((5..8), inf)).play(~slave2, quant: 1);
+a = Pbind(\degree, Pseq((1..4), inf)).play(~slave1, quant: 1); b = Pbind(\degree, Pseq((5..8), inf)).play(~slave2, quant: 1);
+
+// master change your tempo
 ~master.tempo = 3;
 
-Pbind(\degree, Pseq((2..5), inf), \dur, 3, \octave, 6).play(~slave2, quant: 1);
+c = Pbind(\degree, Pseq((2..5), inf), \dur, 3, \octave, 6).play(~slave2, quant: 1);
 
 ~slave1.beats == ~slave2.beats; // these will be the same
 
 // cleanup
-~slave1.free; ~slave2.free; ~master.stop;
+~slave1.free; ~slave2.free; ~master.stop; a.stop; b.stop; c.stop;
 
 
 
 ////////////////////////
 // Beacon Clocks
 
-// this is a decentralised clock
+// this is a decentralised clock, we can have as many as we like on any machines
+// we'll make these all the same, but you can have independent ones by specifying different
+// OSC paths for them
 (
 ~clock1 = BeaconClock(~addrBook);
 ~clock2 = BeaconClock(~addrBook);
 ~clock3 = BeaconClock(~addrBook);
 )
 
+
+// beats and tempi will all be the same
+// get your friends to compare on their computers
 "Beats1: % Beats2: % Beats3: % Tempo1: % Tempo2: % Tempo3: %\n".postf(~clock1.beats, ~clock2.beats, ~clock3.beats, ~clock1.tempo, ~clock2.tempo, ~clock3.tempo);
 
+// somebody play something
 (
-Pbind(\degree, Pseq((1..3), inf)).play(~clock1);
-Pbind(\degree, Pseq((4..6), inf)).play(~clock2);
-Pbind(\degree, Pseq((8..10), inf)).play(~clock3);
+a = Pbind(\degree, Pseq((1..3), inf)).play(~clock1);
+b = Pbind(\degree, Pseq((4..6), inf)).play(~clock2);
+c = Pbind(\degree, Pseq((8..10), inf)).play(~clock3);
 )
 
-(
-~clock2.tempo = 1.1;
-SystemClock.sched(0, {
-"Beats1: % Beats2: % Beats3: % Tempo1: % Tempo2: % Tempo3: %\n".postf(~clock1.beats, ~clock2.beats, ~clock3.beats, ~clock1.tempo, ~clock2.tempo, ~clock3.tempo);
-	0.1
-})
-)
+// now somebody else try these
+~clock3.setGlobalTempo(0.1);
+~clock2.setGlobalTempo(30, ~clock2.beats + 0.25); // default is change on next whole beat, but we can specify
 
-~clock3.tempo = 0.1;
-~clock3.tempo = 30;
-
+// accel or decel is also possible
+~clock1.fadeTempo(1, 50); // change to 1 beat/sec over 50 beats
 
 ////////////////////////
 // Use OSCDataSpace and OSCObjectSpace, in this case to make local instances for remote Servers and share SynthDefs
@@ -185,7 +189,7 @@ SystemClock.sched(0, {
 
 // here we will share some arbitrary objects
 // OSCObjectSpace makes local copies of archivable objects stored remotely (see notes below)
-~objSpace = OSCObjectSpace(~addrBook1, oscPath:'/someObjs');
+~objSpace = OSCObjectSpace(~addrBook, oscPath:'/someObjs');
 
 
 // post a message when a new object comes
@@ -208,17 +212,17 @@ SystemClock.sched(0, {
 // here we'll share some parameters
 // OSCDataSpace allows OSC types only
 // NB that Strings are converted to Symbols by SC's OSC implementation
-~params = OSCDataSpace(~addrBook1, '/params');
+~params = OSCDataSpace(~addrBook, '/params');
 
 
 // now somebody set freq
 ~params[\freq] = 880;
 
 // somebody else start playing
-~pbind = Pbind(\freq, Pfunc({~params2[\freq]})).play;
+~pbind = Pbind(\freq, Pfunc({~params[\freq]})).play;
 
 // somebody else change it
-~params2[\freq] = 660;
+~params[\freq] = 660;
 
 ~pbind.stop;
 
