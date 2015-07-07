@@ -236,7 +236,7 @@ OSCObjectSpace : AbstractOSCDataSpace {
 			var key, val;
 			if(addrBook.addrs.includesEqual(addr), {
 				key = msg[1];
-				val = encryptor.decryptBytes(msg[2]);
+				val = encryptor.decryptBytes(msg[2]).asString;
 				if(validate.not || {this.validateArchive(val)}, {
 					val = val.interpret;
 					if(acceptEvents || val.isKindOf(Event).not, {
@@ -270,8 +270,9 @@ OSCObjectSpace : AbstractOSCDataSpace {
 							waiting = false;
 							pairs = msg[1..];
 							pairs.pairsDo({|key, val|
+								val = encryptor.decryptBytes(val).asString;
 								if(validate.not || {this.validateArchive(val)}, {
-									val = encryptor.decryptBytes(val).interpret;
+									val = val.interpret;
 									if(dict[key] != val, {
 										dict[key] = val;
 										this.changed(\val, key, val);
