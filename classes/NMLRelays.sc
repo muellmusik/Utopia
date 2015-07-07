@@ -220,7 +220,7 @@ OSCDataSpace : AbstractOSCDataSpace {
 // This currently uses asTextArchive, which requires the interpreter for reconstruction, and thus could execute arbitrary code
 
 OSCObjectSpace : AbstractOSCDataSpace {
-	var <>acceptEvents, encryptor;
+	var <>acceptEvents, <>validate=true, encryptor;
 
 	*new {|addrBook, acceptEvents = false, oscPath = '/oscObjectSpace', encryptor|
 		^super.new.acceptEvents_(acceptEvents).init(addrBook, oscPath, encryptor);
@@ -236,11 +236,14 @@ OSCObjectSpace : AbstractOSCDataSpace {
 			var key, val;
 			if(addrBook.addrs.includesEqual(addr), {
 				key = msg[1];
-				val = encryptor.decryptBytes(msg[2]).interpret;
-				if(acceptEvents || val.isKindOf(Event).not, {
-					dict[key] = val;
-					this.changed(\val, key, val);
-				}, { "OSCObjectSpace rejected event % from addr: %\n".format(val, addr).warn; });
+				val = encryptor.decryptBytes(msg[2]);
+				if(validate.not || {this.validateArchive(val)}, {
+					val = val.interpret;
+					if(acceptEvents || val.isKindOf(Event).not, {
+						dict[key] = val;
+						this.changed(\val, key, val);
+					}, { "OSCObjectSpace rejected event % from addr: %\n".format(val, addr).warn; });
+				}, { "OSCObjectSpace failed to validate archive % from addr: %\n".format(val, addr).warn;})
 			}, {"OSCObjectSpace access attempt from unrecognised addr: %\n".format(addr).warn;});
 		}, oscPath, recvPort: addrBook.me.addr.port).fix;
 	}
@@ -267,11 +270,13 @@ OSCObjectSpace : AbstractOSCDataSpace {
 							waiting = false;
 							pairs = msg[1..];
 							pairs.pairsDo({|key, val|
-								val = encryptor.decryptBytes(val).interpret;
-								if(dict[key] != val, {
-									dict[key] = val;
-									this.changed(\val, key, val);
-								});
+								if(validate.not || {this.validateArchive(val)}, {
+									val = encryptor.decryptBytes(val).interpret;
+									if(dict[key] != val, {
+										dict[key] = val;
+										this.changed(\val, key, val);
+									});
+								}, { "OSCObjectSpace failed to validate archive % from addr: %\n".format(val, addr).warn;})
 							});
 						}, oscPath ++ "-sync-reply", syncAddr).oneShot;
 					});
@@ -280,6 +285,13 @@ OSCObjectSpace : AbstractOSCDataSpace {
 				period.wait;
 			});
 		}.fork;
+	}
+
+	validateArchive {|textArchive|
+		^textArchive.find("unixCmd").isNil
+			and: { textArchive.find("File").isNil }
+			and: { textArchive.find("Pipe").isNil }
+			and: { textArchive.find("systemCmd").isNil }
 	}
 
 	put {|key, value|
