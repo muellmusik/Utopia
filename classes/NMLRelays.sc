@@ -59,9 +59,6 @@ CodeRelay {
 	}
 }
 
-// This now uses binaryArchive for safety reasons, as this avoids the use of the interpreter
-// However, this could cause problems if you send to someone with a different version of SC
-// Possibly using the textArchive should be an option
 SynthDescRelay {
 	var addrBook, oscPath, libName, encryptor, lib, oscFunc;
 	var justAddedRemote = false;
@@ -220,9 +217,8 @@ OSCDataSpace : AbstractOSCDataSpace {
 // It is thus best used on a secure network with trusted peers, or with an authenticated addrBook (e.g. using ChallengeAuthenticator)
 // and/or using password protected encryption
 // It also has the option to reject instances of Event and subclasses (rejects by default)
-// This currenly uses binaryArchive for safety reasons, as this avoids the use of the interpreter, which could execute arbitrary code
-// However, this could cause problems if you send to someone with a different version of SC
-// Possibly using the textArchive should be an option
+// This currently uses asTextArchive, which requires the interpreter for reconstruction, and thus could execute arbitrary code
+
 OSCObjectSpace : AbstractOSCDataSpace {
 	var <>acceptEvents, encryptor;
 
@@ -240,7 +236,7 @@ OSCObjectSpace : AbstractOSCDataSpace {
 			var key, val;
 			if(addrBook.addrs.includesEqual(addr), {
 				key = msg[1];
-				val = encryptor.decryptBytes(msg[2]).unarchive;
+				val = encryptor.decryptBytes(msg[2]).interpret;
 				if(acceptEvents || val.isKindOf(Event).not, {
 					dict[key] = val;
 					this.changed(\val, key, val);
@@ -249,10 +245,10 @@ OSCObjectSpace : AbstractOSCDataSpace {
 		}, oscPath, recvPort: addrBook.me.addr.port).fix;
 	}
 
-	getPairs { ^dict.asSortedArray.collect({|pair| [pair[0], encryptor.encryptBytes(pair[1].asBinaryArchive)]}).flatten }
+	getPairs { ^dict.asSortedArray.collect({|pair| [pair[0], encryptor.encryptBytes(pair[1].asTextArchive)]}).flatten }
 
 	updatePeers {|key, value|
-			addrBook.others.sendMsg(oscPath, key, encryptor.encryptBytes(value.asBinaryArchive));
+			addrBook.others.sendMsg(oscPath, key, encryptor.encryptBytes(value.asTextArchive));
 	}
 
 	sync {|addr, period = 0.3, timeout = inf|
@@ -271,7 +267,7 @@ OSCObjectSpace : AbstractOSCDataSpace {
 							waiting = false;
 							pairs = msg[1..];
 							pairs.pairsDo({|key, val|
-								val = encryptor.decryptBytes(val).unarchive;
+								val = encryptor.decryptBytes(val).interpret;
 								if(dict[key] != val, {
 									dict[key] = val;
 									this.changed(\val, key, val);
