@@ -272,7 +272,7 @@ Hail {
 
 	updateForAddr {|name, addr, time|
 		var peer;
-		if(lastResponses[name].isNil, {
+		if(addrBook[name].isNil, {
 			peer = Peer(name, addr);
 			authenticator.authenticate(peer, {
 				addrBook.add(peer);
