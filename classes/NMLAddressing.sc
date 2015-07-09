@@ -290,6 +290,7 @@ Hail {
 					peer.online = true;
 					lastResponses[name] = time;
 					"Peer % rejoined the Utopia\n".postf(name);
+					peer.changed(\addr);
 				});
 			}, {
 				peer.online = true;
@@ -434,7 +435,9 @@ Registrant {
 			var peer;
 			if(addrBook[msg[1]].notNil, {
 				"Peer % rejoined the Utopia\n".postf(msg[1]);
-				addrBook[msg[1]].addr = NetAddr(msg[2].asString, msg[3]);
+				peer = addrBook[msg[1]];
+				peer.addr = NetAddr(msg[2].asString, msg[3]);
+				peer.changed(\addr);
 			}, {
 				peer = this.makePeer(*msg[1..]);
 				addrBook.add(peer);
