@@ -84,7 +84,9 @@ ConductorClock {
 		});
 	}
 
-	stop { tempoClock.stop; }
+	permanent_ {|bool| tempoClock.permanent_(bool); }
+
+	stop { tempoClock.permanent = false; tempoClock.stop; }
 
 }
 
