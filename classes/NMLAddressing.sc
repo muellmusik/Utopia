@@ -235,6 +235,7 @@ PeerGroupManager {
 // who's there?
 Hail {
 	var <addrBook, period, oscPath, authenticator, broadcastAddr, me, inOSCFunc, outOSCFunc, lastResponses;
+	var skipJack;
 
 	*new { |addrBook, period = 1.0, me, authenticator, oscPath = '/hail', broadcastAddr|
 		addrBook = addrBook ?? { AddrBook.new };
@@ -299,16 +300,15 @@ Hail {
 		});
 	}
 
-	free { inOSCFunc.free; outOSCFunc.free; }
+	free { inOSCFunc.free; outOSCFunc.free; skipJack.stop; }
 
 	hailingSignal {
 		NetAddr.broadcastFlag = true;
 		broadcastAddr = broadcastAddr ?? {NMLNetAddrMP("255.255.255.255", 57120 + (0..7))};
-		SystemClock.sched(0, {
+		skipJack = SkipJack({
 			broadcastAddr.sendMsg(oscPath, me.name);
-			if(period.notNil, { this.checkOnline; });
-			period;
-		});
+			this.checkOnline;
+		}, period, false);
 	}
 
 	// everybody still there?
