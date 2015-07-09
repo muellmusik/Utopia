@@ -108,6 +108,7 @@ BeaconClock : TempoClock {
 	var oscPath, compareDict, broadcastAddr;
 	var compareOSCpath, globalTempoOSCpath, globalClearOSCpath;
 	var fadeTask, fading=false;
+	var count = 0;
 
 	*new { |addrBook, tempo, beats, seconds, queueSize=256, oscPath = '/beaconClock'|
 		if(addrBook.isNil, { "BeaconClock cannot work with nil AddrBook!".throw });
@@ -123,7 +124,7 @@ BeaconClock : TempoClock {
 	}
 
 	startBeacons {
-		var count = 0, myName, numReplies;
+		var myName, numReplies;
 		// unusually we'll use broadcast here to avoid variations in send time
 		NetAddr.broadcastFlag = true;
 		broadcastAddr = NMLNetAddrMP("255.255.255.255", 57120 + (0..7));
@@ -139,6 +140,8 @@ BeaconClock : TempoClock {
 			(rrand(0.1, 0.2) * max(addrBook.onlinePeers.size, 1)); // minimum wait even if no other peers
 		});
 	}
+
+	cmdPeriod { this.startBeacons }
 
 	makeOSCFuncs {
 		compareDict = IdentityDictionary.new;
@@ -293,6 +296,7 @@ BeaconClock : TempoClock {
 		compareOSCFunc.permanent_(bool);
 		tempoOSCFunc.permanent_(bool);
 		clearOSCFunc.permanent_(bool);
+		if(bool, {CmdPeriod.add(this)}, {CmdPeriod.remove(this)});
 		super.permanent_(bool);
 	}
 }
