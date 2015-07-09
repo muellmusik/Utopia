@@ -325,6 +325,7 @@ Hail {
 // Centralised
 Registrar {
 	var <addrBook, period, authenticator, oscPath, lastResponses, pingRegistrarOSCFunc, registerOSCFunc, unRegisterOSCFunc, pingReplyOSCFunc;
+	var skipJack;
 
 	*new { |addrBook, period = 1.0, authenticator, oscPath = '/register'|
 		addrBook = addrBook ?? { AddrBook.new };
@@ -385,14 +386,13 @@ Registrar {
 		}, oscPath ++ "-pingReply").fix;
 	}
 
-	free { pingRegistrarOSCFunc.free; registerOSCFunc.free; unRegisterOSCFunc.free; pingReplyOSCFunc.free }
+	free { pingRegistrarOSCFunc.free; registerOSCFunc.free; unRegisterOSCFunc.free; pingReplyOSCFunc.free; skipJack.stop; }
 
 	ping {
-		SystemClock.sched(0, {
+		skipJack = SkipJack({
 			addrBook.sendAll(oscPath ++ "-ping");
 			this.checkOnline;
-			period;
-		});
+		}, period, false);
 	}
 
 	// everybody still there?
