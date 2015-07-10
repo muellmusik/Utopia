@@ -111,6 +111,13 @@ AddrBook {
 
 	addrs { ^dict.values.collect({|peer| peer.addr }) }
 
+	includesAddr{|addr|
+		this.addrs.do({|peerAddr|
+			if (peerAddr.matches(addr), {^true});
+		});
+		^false
+	}
+
 	// methods to generate PeerGroups
 
 	onlinePeers { ^PeerGroup(\online, dict.reject({|peer| peer.online.not }).values) }

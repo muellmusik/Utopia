@@ -27,7 +27,7 @@ CodeRelay {
 	makeOSCFunc {
 		oscFunc = OSCFunc({|msg, time, addr|
 			var name, code;
-			if(addrBook.addrs.includesEqual(addr), {
+			if(addrBook.includesAddr(addr), {
 				name = msg[1];
 				code = encryptor.decryptText(msg[2]);
 				this.changed(\code, name, code);
@@ -77,7 +77,7 @@ SynthDescRelay {
 	makeOSCFunc {
 		oscFunc = OSCFunc({|msg, time, addr|
 			var desc, defcode, stream;
-			if(addrBook.addrs.includesEqual(addr), {
+			if(addrBook.includesAddr(addr), {
 				stream = CollStream(encryptor.decryptBytes(msg[2]));
 				stream.getInt32; // 'SCgf'
 				stream.getInt32; // version
@@ -169,7 +169,7 @@ OSCDataSpace : AbstractOSCDataSpace {
 	makeOSCFunc {
 		oscFunc = OSCFunc({|msg, time, addr|
 			var key, val;
-			if(addrBook.addrs.includesEqual(addr), {
+			if(addrBook.includesAddr(addr), {
 				key = msg[1];
 				val = msg[2];
 				dict[key] = val;
@@ -234,7 +234,7 @@ OSCObjectSpace : AbstractOSCDataSpace {
 	makeOSCFunc {
 		oscFunc = OSCFunc({|msg, time, addr|
 			var key, val;
-			if(addrBook.addrs.includesEqual(addr), {
+			if(addrBook.includesAddr(addr), {
 				key = msg[1];
 				val = encryptor.decryptBytes(msg[2]).asString;
 				if(validate.not || {this.validateArchive(val)}, {
