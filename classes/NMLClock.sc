@@ -184,7 +184,7 @@ BeaconClock : TempoClock {
 			//\foo.postln;
 			//msg.postln;
 			key = msg[1];
-			if(addrBook.addrs.includesEqual(addr), {
+			if(addrBook.includesAddr(addr), {
 				if(compareDict[\beaconKey] == key && {compareDict[\compareAddrs].includesEqual(addr)}, {
 					tempo = msg[2];
 					beats = msg[3];
@@ -204,7 +204,7 @@ BeaconClock : TempoClock {
 			tempo = msg[1];
 			beats = msg[2];
 			//"tempo: % beat: %\n".postf(tempo, beats);
-			if(addrBook.addrs.includesEqual(addr), {
+			if(addrBook.includesAddr(addr), {
 				// if the message is late, do it *now*
 				if(beats < this.beats, {
 					this.tempo = tempo
@@ -217,7 +217,7 @@ BeaconClock : TempoClock {
 		clearOSCFunc = OSCFunc({|msg, time, addr|
 			var releaseNodes;
 			releaseNodes = msg[1].booleanValue;
-			if(addrBook.addrs.includesEqual(addr), {
+			if(addrBook.includesAddr(addr), {
 				this.clear(releaseNodes);
 			}, {"BeaconClock received global clear message from unknown address: %\n".format(addr).warn;});
 		}, globalClearOSCpath);
