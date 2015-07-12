@@ -117,6 +117,8 @@ and demonstrating Utopia modules.
 // cleanup
 ~codeRelay.free; ~win.close;
 
+~codeRelay.post = false; // turn off posting
+
 
 
 ////////////////////////
@@ -124,7 +126,7 @@ and demonstrating Utopia modules.
 // Master and slave clocks must share a common time base, e.g. using the NTP class
 // Ticks are scheduled with a small latency, so as to avoid drift
 
-
+s.boot;
 // make some slaves first, then the master. They only advance when master ticks, so they should stay aligned
 // these could be on different machines, but you could also have multiple slaves on one machine...
 (
@@ -180,7 +182,7 @@ c = Pbind(\degree, Pseq((8..10), inf)).play(~clock3);
 ~clock2.setGlobalTempo(30, ~clock2.beats + 0.25); // default is change on next whole beat, but we can specify
 
 // accel or decel is also possible
-~clock1.fadeTempo(1, 50); // change to 1 beat/sec over 50 beats
+~clock2.fadeTempo(1, 50); // change to 1 beat/sec over 50 beats
 
 ////////////////////////
 // Use OSCDataSpace and OSCObjectSpace, in this case to make local instances for remote Servers and share SynthDefs
@@ -233,3 +235,62 @@ c = Pbind(\degree, Pseq((8..10), inf)).play(~clock3);
 3. OSCObjectSpace can constitute a security risk, since a malicious party could insert a pseudo-object spoofing something else. For this reason, by default it does not accept Events, although you can enable that. For safety it is best to use it on a secure network, and with encryption. If auto-discovering peers on an open network, the use of an autheniticator such as ChallengeAuthenticator can provide additional security.
 
 */
+
+////////////////////////
+// ServerRegistry syncs info about Servers between the Peers in the supplied AddrBook.
+// This can be the simple case of one server per Peer, but arbitrary configs are also possible.
+
+~reg = ServerRegistry(~addrBook);
+
+// Convenience method to add the default server on this machine under my name
+~reg.addMyServer;
+
+~reg.keys; // all the keys in the ServerRegistry
+
+/* Create a PeerGroup manager to create and sync groups between users. PeerGroups can be clients, servers, or anything which matches a name to an address.
+In this case we want to have groups of servers, so we'll pass the ServerRegistry, but it also works with clients and AddrBook */
+~gm = PeerGroupManager(~reg, '/serverGroups');
+
+// make a server group with two randomly selected servers. Form is \groupName, [key1, key2...]
+~gm.add(\twoServers, ~reg.keys.asArray.scramble.keep(2)); // make a group
+
+x = Synth(\default, target:~reg.values.choose.postln) // pick a random server
+x.free;
+// we can use any method that Array understands, since PeerGroup is an Array subclass!
+Synth(\default, target:~gm[\twoServers].choose)
+
+// similarly, we can use any list pattern with a PeerGroup, since it is an Array
+Pbind(\server, Pseq(~gm[\twoServers], inf), \dur, 0.1).play
+
+Pbind(\server, Pseq(~reg.values, inf), \dur, 0.1, \degree, Pseq((0..9), 1)).play
+
+
+// AddrBook methods which produce PeerGroups
+~addrBook.peers; // a PeerGroup with everybody
+~addrBook.others; // a PeerGroup with everybody else
+~addrBook.onlinePeers; // a PeerGroup with everybody currently online
+
+
+////////////////////////
+// SynthDescRelay keeps shares SynthDefs between Peers
+// we'll get updated each time a new desc is added remotely
+// and SynthDescRelay adds the desc to the specified lib (the global on by default)
+// (If we use the add method, all known servers will be updated anyway, but this keeps
+// out libs in sync)
+
+// everybody run this
+~synthDescRel = SynthDescRelay(~addrBook);
+
+// now adds an action for new descs
+(
+~synthDescRel.addDependant({|descRelay, what, desc, defcode|
+	"Check out this new def!!\n\n%\n".format(defcode).postln;
+});
+)
+
+// now someone make a def
+SynthDef(\foo, {|freq = 440, dur = 1, amp = 0.1| Out.ar(0, SinOsc.ar(freq, 0, amp) * Env.sine(dur).kr(2));}).add;
+
+// someone else try to look it up
+SynthDescLib.at(\foo);
+Synth(\foo);
