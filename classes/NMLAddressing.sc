@@ -266,13 +266,13 @@ Hail {
 		// this makes discovery more robust when there're multiple interfaces
 		inOSCFunc = OSCFunc({|msg, time, addr|
 			var name;
-			name = msg[1];
+			name = msg[1].asString.asSymbol;
 			this.updateForAddr(name, addr, time);
 		}, replyPath, recvPort: addrBook.me.addr.port).fix;
 
 		outOSCFunc = OSCFunc({|msg, time, addr|
 			var name;
-			name = msg[1];
+			name = msg[1].asString.asSymbol;
 			this.updateForAddr(name, addr, time);
 			addr.sendMsg(replyPath, me.name);
 		}, oscPath, recvPort: addrBook.me.addr.port).fix;
