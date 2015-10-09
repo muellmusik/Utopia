@@ -191,11 +191,11 @@ NMLNetRecord : NMLRecord {
 
 	*freeAllBut { arg serverList, evenRemote = false;
 		if (evenRemote) {
-			set.do { arg server;
+			this.all.do { arg server;
 				if ( server.serverRunning and: serverList.includes(server).not ) { server.freeAll }
 			}
 		} {
-			set.do { arg server;
+			this.all.do { arg server;
 				if (server.isLocal and: { server.serverRunning } and: { serverList.includes(server).not }) { server.freeAll }
 			}
 		}
