@@ -7,7 +7,9 @@ NMLShout {
 
 	*initClass {
 		shouts = List.new;
-		codeDumpFunc = { |str| if (str.beginsWith(Shout.tag)) { Shout(str.drop(Shout.tag.size)) } };
+		codeDumpFunc = { |str| if (str.beginsWith(tag)) {
+			this.new(str.drop(tag.size)) }
+		};
 		rect = Rect(0, 0, 1024, 80);
 	}
 
@@ -27,21 +29,6 @@ NMLShout {
 
 		this.setMessage(message);
 	}
-
-		// simple versions of methods, for sc-book chapter
-//	*setMessage { |message|
-//		txtView.string_(message.asString)
-//	}
-
-//	*new { |message="Shout'er!"|
-//		shouts.add(message);
-//
-//		if (win.isNil or: { win.isClosed }) {
-//			this.makeWin(message);
-//		} {
-//			this.setMessage(message);
-//		};
-//	}
 
 	*new { |message="Shout'er!"|
 		var currDoc;
@@ -93,15 +80,22 @@ NMLShout {
 
 }
 /* Tests
-Shout("We should consider stopping...")
-Shout("Hey Hey Hey Na na na!");
+NMLShout("We should consider stopping...")
+NMLShout("Hey Hey Hey Na na na!");
 
-Shout.add;
-//!! does this show up
-Shout.remove;
-//!! does this show up
+NMLShout.add;
+//!! this should show up
+NMLShout.remove;
+//!! now this should NOT show up
 
-// 	for pbup setup use, add to Oscresponder(nil, '/share' ...) :
-	if (str.beginsWith(Shout.tag)) { Shout(str.drop(Shout.tag.size) + "-" ++ msg[1]) };
+// for shared Shouting, add this to the codeRelay for History:
+	if (codeStr.beginsWith(NMLShout.tag)) { NMLShout(codeStr) };
+
+// for example, like this:
+~codeRelay.addDependant({|chatter, what, who, code|
+	var codeStr = code.asString;
+	if (codeStr.beginsWith(NMLShout.tag)) { NMLShout(codeStr) };
+	History.enter(codeStr, who);
+});
 
 */
