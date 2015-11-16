@@ -279,7 +279,7 @@ Hail {
 	}
 
 	updateForAddr {|name, addr, time|
-		var peer;
+		var peer, testPeer;
 		if(addrBook[name].isNil, {
 			peer = Peer(name, addr);
 			authenticator.authenticate(peer, {
@@ -292,7 +292,7 @@ Hail {
 			if(peer.addr.matches(addr).not, {
 				// this probably means the peer recompiled and
 				// has a different port
-				var testPeer = peer.copy.addr_(addr);
+				testPeer = peer.copy.addr_(addr);
 				authenticator.authenticate(testPeer, {
 					peer.addr_(addr);
 					peer.online = true;
