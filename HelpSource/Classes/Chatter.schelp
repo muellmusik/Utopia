@@ -1,0 +1,84 @@
+TITLE:: Chatter
+summary:: Text chat for Utopia Peers
+categories:: Relay classes
+related:: Guides/Utopia, Classes/AddrBook, Classes/Peer, Classes/Hail, Classes/Registrar, Classes/SynthDescRelay, Classes/CodeRelay, etc.
+
+DESCRIPTION::
+Chatter provides a simple text chat interface for Peers in link::Guides/Utopia::. It provides support for private and public (group wide) messaging.
+
+
+CLASSMETHODS::
+
+METHOD:: new
+create a new Chatter
+
+ARGUMENT:: addrBook
+an AddrBook where Peers are registered
+
+ARGUMENT:: post
+A link::Classes/Boolean:: indicating whether receieved chat messages are printed in the post window.
+
+ARGUMENT:: oscPath
+the oscPath to use for relaying
+
+ARGUMENT:: encryptor
+an (optional) encryptor for chat messages
+
+returns:: a new Chatter
+
+
+INSTANCEMETHODS::
+
+PRIVATE::makeOSCFunc
+
+METHOD:: post
+when true, Chatter prints received messages to the post window
+
+returns:: a Boolean
+
+METHOD:: send
+Send a message to all Peers in this Chatter's AddrBook
+
+ARGUMENT:: chat
+a link::Classes/String:: containing the message
+
+METHOD:: sendPrivate
+Send a message to one Peer in this Chatter's AddrBook
+
+ARGUMENT:: name
+The name of the Peer to send to.
+
+ARGUMENT:: chat
+a link::Classes/String:: containing the message
+
+METHOD:: free
+remove the Chatter by freeing its oscFunc.
+
+
+
+
+
+EXAMPLES::
+
+code::
+~addrBook = AddrBook.new;
+~hail = Hail(~addrBook); // discover some Peers
+~chatter = Chatter(~addrBook);
+
+~chatter.send("howdy");
+~chatter.sendPrivate(\mac, "Psst... howdy!"); // send only to \mac
+
+// make a GUI to see the results
+(
+~win = Window("Chatty Betty").front;
+~win.layout = VLayout(~textField = TextField(), ~textView = TextView());
+~textField.action_({|v| ~chatter.send(v.string); v.string = "" });
+// to get updates, just add a dependant
+~chatter.addDependant({|chatter, what, who, chat|
+	{ ~textView.string_(who ++ ": " ++ chat ++ "\n" ++ ~textView.string) }.defer;
+});
+)
+
+// cleanup
+~chatter.free; ~win.close;
+::

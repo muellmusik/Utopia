@@ -1,0 +1,58 @@
+TITLE:: SynthDescRelay
+summary:: Sync SynthDescs between Peers in Utopia
+categories:: Relay classes
+related:: Guides/Utopia, Classes/AddrBook, Classes/Peer, Classes/Hail, Classes/Registrar, Classes/Chatter, Classes/CodeRelay, etc.
+
+DESCRIPTION::
+SynthDefs will automatically be sent to all known Servers when 'added'. This class enables the corresponding SynthDescs to be synced between Peers.
+
+
+CLASSMETHODS::
+
+METHOD:: new
+create a new SynthDescRelay
+
+ARGUMENT:: addrBook
+an AddrBook where Peers are registered
+
+ARGUMENT:: oscPath
+the oscPath to use when relaying
+
+ARGUMENT:: libName
+The name of the link::Classes/SynthDescLib:: to sync
+
+ARGUMENT:: encryptor
+an (optional) encryptor for sharing descs
+
+returns:: a new SynthDescRelay
+
+
+INSTANCEMETHODS::
+
+private::update, makeOSCFunc, init, updateFromLib
+
+METHOD:: free
+remove the SynthDescRelay by freeing its oscFunc.
+
+
+EXAMPLES::
+
+code::
+// assumes ~addrBook contains the appropriate Peers
+// everybody run this
+~synthDescRel = SynthDescRelay(~addrBook);
+
+// now adds an action for new descs
+(
+~synthDescRel.addDependant({|descRelay, what, desc, defcode|
+	"Check out this new def!!\n\n%\n".format(defcode).postln;
+});
+)
+
+// now someone make a def
+SynthDef(\foo, {|freq = 440, dur = 1, amp = 0.1| Out.ar(0, SinOsc.ar(freq, 0, amp) * Env.sine(dur).kr(2));}).add;
+
+// someone else try to look it up
+SynthDescLib.at(\foo);
+Synth(\foo);
+::

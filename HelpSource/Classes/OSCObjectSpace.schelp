@@ -1,0 +1,81 @@
+TITLE:: OSCObjectSpace
+summary:: Sync simple data types between Peers
+categories:: Relay classes
+related:: Guides/Utopia, Classes/AddrBook, Classes/Peer, Classes/OSCDataSpace, Classes/IdentityDictionary etc.
+
+DESCRIPTION::
+Sync simple data types between Peers. Unlike OSCDataSpace it supports more than just OSC data types. It functions similarly to a link::Classes/IdentityDictionary:: in its basic operation (i.e. you can use at and put)
+
+SECTION::Important Issues when using OSCObjectSpace
+LIST::
+##Only objects which can be archived (i.e. those that do not contain open functions) can be sent
+##OSCObjectSpace does not track internal changes in the objects it holds. You can set the key again with the changed object, but this will result in a new object being made in other Peer's object spaces, not the old one being changed. If you want to sync changes to remote objects the OpenObject quark might be better.
+##OSCObjectSpace can constitute a  EMPHASIS::security risk::, since a malicious party could insert a pseudo-object spoofing something else. For this reason, by default it does not accept Events, although you can enable that. For safety it is best to use it on a secure network, and with encryption. If auto-discovering peers on an open network, the use of an autheniticator such as ChallengeAuthenticator can provide additional security.
+::
+
+CLASSMETHODS::
+
+METHOD:: new
+(describe method here)
+
+ARGUMENT:: addrBook
+an AddrBook where Peers are registered
+
+ARGUMENT:: acceptEvents
+A Boolean indicating whether Events are permitted in this OSCObjectSpace.
+
+ARGUMENT:: oscPath
+the oscPath to use when relaying
+
+ARGUMENT:: encryptor
+an (optional) encryptor for sending objects
+
+returns:: a new OSCObjectSpace
+
+
+INSTANCEMETHODS::
+
+private::updatePeers, makeOSCFunc, sync, validateArchive, init, put
+
+METHOD:: getPairs
+Get pairwise keys and values
+
+returns:: Return an link::Classes/Array:: with all keys and values pairwise.
+
+METHOD:: acceptEvents
+Get or set a link::Classes/Boolean:: indicating whether this OSCObjectSpace accepts Events. Changing this will not purge any currently stored Events.
+
+returns:: a link::Classes/Boolean::
+
+METHOD:: validate
+Get or set a link::Classes/Boolean:: indicating whether this OSCObjectSpace validates received objects by searching for particular high risk strings (unixCmd, systemCmd, Pipe, File). Objects which do not pass validation are rejected. The default is true.
+
+returns:: a link::Classes/Boolean::
+
+
+EXAMPLES::
+
+code::
+// assumes ~addrBook contains the appropriate Peers
+// here we will share some arbitrary objects
+// OSCObjectSpace makes local copies of archivable objects stored remotely (see notes below)
+~objSpace = OSCObjectSpace(~addrBook, oscPath:'/someObjs');
+
+
+// post a message when a new object comes
+// you could use this to update other objects, etc.
+(
+~objSpace.addDependant({|objectSpace, what, key, val|
+	"New object for key %: %\n".postf(key, val);
+});
+)
+
+// now add some stuff
+~objSpace[\point] = 2@3;
+
+// your friends should see it
+~objSpace[\point]
+
+// somebody change it
+~objSpace[\point] = ">>>>>>>";
+::

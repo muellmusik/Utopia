@@ -1,0 +1,53 @@
+TITLE:: OSCDataSpace
+summary:: Sync simple data types between Peers
+categories:: Relay classes
+related:: Guides/Utopia, Classes/AddrBook, Classes/Peer, Classes/OSCObjectSpace, Classes/IdentityDictionary etc.
+
+DESCRIPTION::
+Sync simple data types between Peers. The types supported are the basic OSC types, so integers, floats and symbols. (SC's OSC implementation converts Strings to Symbols.) It functions similarly to a link::Classes/IdentityDictionary:: in its basic operation (i.e. you can use at and put).
+
+
+CLASSMETHODS::
+
+METHOD:: new
+Create a new OSCDataSpace
+
+ARGUMENT:: addrBook
+an AddrBook where Peers are registered
+
+ARGUMENT:: oscPath
+the oscPath to use when relaying
+
+returns:: a new OSCDataSpace
+
+
+INSTANCEMETHODS::
+
+private::updatePeers, makeOSCFunc, sync
+
+METHOD:: getPairs
+Get pairwise keys and values
+
+returns:: Return an link::Classes/Array:: with all keys and values pairwise.
+
+
+EXAMPLES::
+
+code::
+// assumes ~addrBook contains the appropriate Peers
+// here we'll share some parameters
+// OSCDataSpace allows OSC types only
+// NB that Strings are converted to Symbols by SC's OSC implementation
+~params = OSCDataSpace(~addrBook, '/params');
+
+// now somebody set freq
+~params[\freq] = 880;
+
+// somebody else start playing
+~pbind = Pbind(\freq, Pfunc({~params[\freq]})).play;
+
+// somebody else change it
+~params[\freq] = 660;
+
+~pbind.stop;
+::
