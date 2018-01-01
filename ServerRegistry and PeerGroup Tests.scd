@@ -9,17 +9,20 @@ In this case we want to have groups of servers, so we'll pass the ServerRegistry
 ~gm = PeerGroupManager(~reg, '/serverGroups');
 
 // make a server group. Form is \groupName, [key1, key2...]
-~gm.add(\twoServers, ~reg.keys.scramble.keep(2)); // make a group
+~gm.add(\twoServers, ~reg.keys.asArray.scramble.keep(2)); // make a group
 
 ~reg.keys; // all the keys in the ServerRegistry
 
-Synth(\default, target:~reg.values.choose) // pick a random server
-
+x = Synth(\default, target:~reg.values.choose.postln) // pick a random server
+x.free;
 // we can use any method that Array understands, since PeerGroup is an Array subclass!
-Synth(\default, target:~gm[\us].choose)
+Synth(\default, target:~gm[\twoServers].choose)
 
 // similarly, we can use any list pattern with a PeerGroup, since it is an Array
-Pbind(\server, Pseq(~gm[\us], inf)).play
+Pbind(\server, Pseq(~gm[\twoServers], inf), \dur, 0.1).play
+
+Pbind(\server, Pseq(~reg.values, inf), \dur, 0.1, \degree, Pseq((0..9), 1)).play
+
 
 // AddrBook methods which produce PeerGroups
 ~addrBook.peers; // a PeerGroup with everybody
