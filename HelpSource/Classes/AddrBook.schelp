@@ -48,13 +48,13 @@ Send an OSC message to one of the Peers in this AddrBook.
 ARGUMENT:: name
 A link::Classes/Symbol:: corresponding to the name of the Peer to whom the message should be sent.
 
-ARGUMENT::  ... msg
+ARGUMENT:: ... msg
 One or more additional arguments comprising the OSC message to send.
 
 METHOD:: sendAll
 Send an OSC message to all of the Peers in this AddrBook.
 
-ARGUMENT::  ... msg
+ARGUMENT:: ... msg
 One or more arguments comprising the OSC message to send.
 
 METHOD:: sendAllBundle
@@ -63,7 +63,7 @@ Send an OSC bundle to all of the Peers in this AddrBook.
 ARGUMENT:: time
 The timestamp for the bundle, specified as some number of seconds into the future. A nil time indicates 'as soon as possible'.
 
-ARGUMENT::  ... msg
+ARGUMENT:: ... msg
 One or more link::Classes/Array::s consisting of the OSC messages in the bundle.
 
 METHOD:: sendExcluding
@@ -72,7 +72,7 @@ Send an OSC message to all of the Peers in this AddrBook, except for the one spe
 ARGUMENT:: name
 A link::Classes/Symbol:: corresponding to the name of the Peer to whom the message should emphasis::not:: be sent.
 
-ARGUMENT::  ... msg
+ARGUMENT:: ... msg
 One or more arguments comprising the OSC message to send.
 
 METHOD:: at
@@ -84,7 +84,7 @@ A link::Classes/Symbol:: corresponding to the name of the Peer to look up.
 returns:: A link::Classes/Peer:: if one with the specified name is found, otherwise nil.
 
 METHOD:: names
-Get the names of the Peers in this AddrBook.  
+Get the names of the Peers in this AddrBook.
 
 returns:: A link::Classes/Set:: containing link::Classes/Symbol::s corresponding to the names of the Peers in this AddrBook.
 
@@ -108,9 +108,26 @@ Get all the addresses of the Peers in this AddrBook
 
 returns:: A link::Classes/Set:: containing the link::Classes/NetAddr::s of the Peers in this AddrBook.
 
+METHOD:: includesAddr
+Test to see if this AddrBook includes the supplied address, or an equivalent one in the case of the local computer (e.g. loopback address will match externally visible ones).
 
-EXAMPLES::
+ARGUMENT:: addr
+A link::Classes/NetAddr:: to check for.
 
-code::
-(some example code)
-::
+returns:: A link::Classes/Boolean:: indicating if the the NetAddr matches one in this AddrBook.
+
+METHOD:: excluding
+Get all Peers excluding the named Peer.
+
+ARGUMENT:: name
+A link::Classes/Symbol:: corresponding to the name of the Peer to exclude.
+
+returns:: A link::Classes/PeerGroup::.
+
+METHOD:: others
+Get all Peers excluding AddrBook.me.
+
+returns:: A link::Classes/PeerGroup::.
+
+METHOD:: asAddrBook
+Returns this.
