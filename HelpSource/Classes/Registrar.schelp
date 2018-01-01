@@ -4,7 +4,7 @@ categories:: Utopia, External Control>OSC
 related:: Guides/Utopia, Classes/Peer, Classes/AddrBook, Classes/Registrant, Classes/Hail, Guides/OSC_Communication
 
 DESCRIPTION::
-Registrar allows centralised registration of participants in a Utopia based network music application. Registrar can run on one of the nodes in a subnetwork, or on a separate node. (The latter can be useful where stability is a concern.) Registrar keeps track of link::Classes/Peers:: joining and leaving a subnetwork, and their online status, and distributes this information to all members.
+Registrar allows centralised registration of participants in a Utopia based network music application. Registrar can run on one of the nodes in a subnetwork, or on a separate node. (The latter can be useful where stability is a concern.) Registrar keeps track of link::Classes/Peer::s joining and leaving a subnetwork, and their online status, and distributes this information to all members.
 
 By using different OSC paths multiple subnetworks can exist on the same physical network. Each participant in a subnetwork should create a link::Classes/Registrant:: with the same path.
 
@@ -22,7 +22,7 @@ ARGUMENT:: period
 The interval in seconds between pings to Peers being sent. Peers which have not responded for > (2 * period) seconds will be marked offline.
 
 ARGUMENT:: authenticator
-An optional authenticator, which is used to authenticate other Peers attempting to join the system. This should be an instance of a subclass of link::Classes/NMLAbstractAuthenticator::, such as link::Classes/ChallengeAuthenticator:: or link::Classes/GroupPasswordAuthenticator::. If nil  Registrar will create an instance of link::Classes/NonAuthenticator:: (no authentication). 
+An optional authenticator, which is used to authenticate other Peers attempting to join the system. This should be an instance of a subclass of link::Classes/NMLAbstractAuthenticator::, such as link::Classes/ChallengeAuthenticator:: or link::Classes/GroupPasswordAuthenticator::. If nil  Registrar will create an instance of link::Classes/NonAuthenticator:: (no authentication).
 
 ARGUMENT:: oscPath
 An OSC compliant path in the form of a link::Classes/Symbol:: or link::Classes/String:: used to identify this subnetwork. By using different paths multiple subnetworks can exist on the same physical network. In simple cases the default ('/register') can be used.

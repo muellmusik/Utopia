@@ -1,7 +1,7 @@
 TITLE:: CodeRelay
 summary:: relays code to network peers and History
 categories:: Relay classes
-related:: Guides/Utopia, Classes/AddrBook, Classes/Peer, Classes/Hail, Classes/Registrar, Classes/SynthDescRelay, etc.
+related:: Guides/Utopia, Classes/AddrBook, Classes/Peer, Classes/Hail, Classes/Registrar, Classes/SynthDescRelay
 
 DESCRIPTION::
 When evaluating code, CodeRelay sends the code as string to all the peers in its AddrBook. This can be used to create a shared code history in collaborative live coding performances.

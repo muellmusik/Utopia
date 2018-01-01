@@ -1,7 +1,7 @@
 TITLE:: OSCDataSpace
 summary:: Sync simple data types between Peers
 categories:: Relay classes
-related:: Guides/Utopia, Classes/AddrBook, Classes/Peer, Classes/OSCObjectSpace, Classes/IdentityDictionary etc.
+related:: Guides/Utopia, Classes/AddrBook, Classes/Peer, Classes/OSCObjectSpace, Classes/IdentityDictionary
 
 DESCRIPTION::
 Sync simple data types between Peers. The types supported are the basic OSC types, so integers, floats and symbols. (SC's OSC implementation converts Strings to Symbols.) It functions similarly to a link::Classes/IdentityDictionary:: in its basic operation (i.e. you can use at and put).

@@ -1,7 +1,7 @@
 TITLE:: Chatter
 summary:: Text chat for Utopia Peers
 categories:: Relay classes
-related:: Guides/Utopia, Classes/AddrBook, Classes/Peer, Classes/Hail, Classes/Registrar, Classes/SynthDescRelay, Classes/CodeRelay, etc.
+related:: Guides/Utopia, Classes/AddrBook, Classes/Peer, Classes/Hail, Classes/Registrar, Classes/SynthDescRelay, Classes/CodeRelay
 
 DESCRIPTION::
 Chatter provides a simple text chat interface for Peers in link::Guides/Utopia::. It provides support for private and public (group wide) messaging.
