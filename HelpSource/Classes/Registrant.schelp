@@ -1,0 +1,44 @@
+TITLE:: Registrant
+summary:: Register a Peer in a centralised Utopia network.
+categories:: Utopia, External Control>OSC
+related:: Guides/Utopia, Classes/Peer, Classes/AddrBook, Classes/Registrar, Classes/Hail, Guides/OSC_Communication
+
+DESCRIPTION::
+Registrant registers a Peer with a corresponding instance of link::Classes/Registrar:: running on the same network. Together they allow centralised registration and population of AddrBooks. (See link::Classes/Hail:: for a decentralised approach.)
+
+
+CLASSMETHODS::
+
+METHOD:: new
+Create a new Registrant.
+
+ARGUMENT:: addrBook
+An optional link::Classes/AddrBook:: which this instance will use to store discovered link::Classes/Peer::s. Users can pass this to other Utopia objects, and know that it will be updated as appropriate. If nil, one will be automatically created.
+
+ARGUMENT:: me
+An optional link::Classes/Peer:: representing the localhost. If nil one will be automatically created using link::Classes/AddrBook#-addMe::.
+
+ARGUMENT:: registrarAddr
+An optional link::Classes/NetAddr:: specifying the broadcast address of this Utopia's link::Classes/Registrar::. If nil, Registrant will ping for one on the local network.
+
+ARGUMENT:: authenticator
+An optional authenticator, which is used to authenticate other Peers attempting to join the system. This should be an instance of a subclass of link::Classes/NMLAbstractAuthenticator::, such as link::Classes/ChallengeAuthenticator:: or link::Classes/GroupPasswordAuthenticator::. If nil  Hail will create an instance of link::Classes/NonAuthenticator:: (no authentication).
+
+ARGUMENT:: oscPath
+An OSC compliant path in the form of a link::Classes/Symbol:: or link::Classes/String:: used to identify this subnetwork. By using different paths multiple subnetworks can exist on the same physical network. In simple cases the default ('/register') can be used. This must match the path given to the corresponding Registrar.
+
+ARGUMENT:: broadcastAddr
+An optional link::Classes/NetAddr:: specifying the broadcast address to use for pinging (see registrarAddr above). If none is provided code::NMLNetAddrMP("255.255.255.255", 57120 + (0..7)):: will be used.
+
+returns:: A new Registrant instance
+
+
+INSTANCEMETHODS::
+
+private:: addOSCFuncs, register, pingRegistrar, init, unregister, makePeer
+
+METHOD:: addrBook
+Get this Registrants's link::Classes/AddrBook::. This can be passed to other Utopia objects.
+
+METHOD:: free
+Free this object and its link::Classes/OSCFunc::s. After this, this Registrant (and probably its AddrBook) should not be used.
