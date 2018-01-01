@@ -26,10 +26,13 @@ ARGUMENT:: me
 An optional link::Classes/Peer:: representing the localhost. If nil one will be automatically created using link::Classes/AddrBook#-addMe::.
 
 ARGUMENT:: authenticator
-An optional authenticator, which is used to authenticate other Peers attempting to join the system. This should be an instance of a subclass of link::Classes/NMLAbstractAuthenticator::, such as link::Classes/ChallengeAuthenticator:: or link::Classes/GroupPasswordAuthenticator::. If nil  Hail will create an instance of link::Classes/NonAuthenticator:: (no authentication). 
+An optional authenticator, which is used to authenticate other Peers attempting to join the system. This should be an instance of a subclass of link::Classes/NMLAbstractAuthenticator::, such as link::Classes/ChallengeAuthenticator:: or link::Classes/GroupPasswordAuthenticator::. If nil  Hail will create an instance of link::Classes/NonAuthenticator:: (no authentication).
 
 ARGUMENT:: oscPath
 An OSC compliant path in the form of a link::Classes/Symbol:: or link::Classes/String:: used to identify this subnetwork. By using different paths multiple subnetworks can exist on the same physical network. In simple cases the default ('/hail') can be used.
+
+ARGUMENT:: broadcastAddr
+An optional link::Classes/NetAddr:: specifying the broadcast address to use for hailing. If none is provided code::NMLNetAddrMP("255.255.255.255", 57120 + (0..7)):: will be used.
 
 returns:: A new Hail instance.
 
