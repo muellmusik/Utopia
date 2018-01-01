@@ -1,0 +1,68 @@
+TITLE:: ServerRegistry
+summary:: Provide a shared dictionary of servers across a Utopia
+categories:: Relay classes
+related:: Guides/Utopia, Classes/AddrBook, Classes/Peer, Classes/OSCObjectSpace, Classes/SynthDescRelay, Classes/IdentityDictionary
+
+DESCRIPTION::
+ServerRegistry is a Dictionary-like class that provides a way to register Servers automatically between a number of Peers. For the simple case of one server per Peer, the link::#-addMyServer:: method is useful, but more complicated arrangements, with multiple servers, shared servers, and servers on non-Peer machines are also possible.
+
+CLASSMETHODS::
+
+METHOD:: new
+Create a new ServerRegistry.
+
+ARGUMENT:: addrBook
+An AddrBook where Peers are registered. Note that these are the addresses of Peers who will share servers by adding them to the registry, not the addresses of the servers themselves.
+
+ARGUMENT:: options
+A link::Classes/ServerOptions:: to use for creating new Servers. In the current implementation, ServerOptions are not shared.
+
+ARGUMENT:: oscPath
+An optional OSC compliant path in the form of a link::Classes/Symbol:: or link::Classes/String:: used to identify this ServerRegistry. If nil the default code::'/serverRegistry':: will be used.
+
+returns:: A new ServerRegistry.
+
+
+INSTANCEMETHODS::
+
+private:: addDataSpace, asAddrBook
+
+METHOD:: keys
+Get the names of the Servers in this registry.
+
+returns:: A link::Classes/Set:: containing the names of the Servers as link::Classes/Symbol::s.
+
+METHOD:: values
+Get the Server objects in this registry,
+
+returns:: A link::Classes/Set:: containing the link::Classes/Server::s.
+
+METHOD:: at
+Get a Server from the registry.
+
+ARGUMENT:: key
+A link::Classes/Symbol:: corresponding to the name of the Server.
+
+returns:: A link::Classes/Server::, or nil if there is no Server with the requested name.
+
+METHOD:: addMyServer
+Convenience method to add my local server
+
+ARGUMENT:: server
+An optional link::Classes/Server:: to add. In most cases this can be left blank, which will add the default Server.
+
+METHOD:: put
+Add a Server to this registry.
+
+ARGUMENT:: name
+A link::Classes/Symbol:: corresponding to the name of the Server.
+
+ARGUMENT:: server
+The link::Classes/Server:: to put at this key.
+
+
+EXAMPLES::
+
+code::
+(some example code)
+::
