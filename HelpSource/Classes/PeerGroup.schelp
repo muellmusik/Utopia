@@ -1,0 +1,59 @@
+TITLE:: PeerGroup
+summary:: A group of Peers
+categories:: Utopia, External Control>OSC
+related:: Guides/Utopia, Classes/AddrBook, Classes/Peer, Guides/OSC_Communication
+
+DESCRIPTION::
+PeerGroup is an link::Classes/Array:: subclass that spoofs a link::Classes/NetAddr::. You can use it send messages to a group of link::Classes/Peer::s at the same time. PeerGroups can be constructed manually or using a link::Classes/PeerGroupManager:: which syncs groups across a Utopia. As well, link::Classes/AddrBook:: provides a number of convenience methods:
+code::
+// assuming ~addrBook contains a properly initialised AddrBook
+~addrBook.peers; // a PeerGroup with everybody
+~addrBook.others; // a PeerGroup with everybody else in the AddrBook but me
+~addrBook.onlinePeers; // a PeerGroup with everybody currently online
+~addrBook.excluding('Bob'); // a PeerGroup with everyone but Bob. Poor Bob.
+::
+
+
+CLASSMETHODS::
+
+METHOD:: new
+Create a new PeerGroup.
+
+ARGUMENT:: name
+A link::Classes/Symbol:: naming the group.
+
+ARGUMENT:: peers
+A link::Classes/Collection:: of link::Classes/Peer::s to add to the new group.
+
+returns:: A new PeerGroup with the supplied Peers.
+
+
+INSTANCEMETHODS::
+
+private:: sendClumpedBundles, printOn, stream
+
+METHOD:: name
+Get or set the name of this group.
+
+returns:: A link::Classes/Symbol::
+
+METHOD:: sendRaw
+Send a raw message without timestamp to the Peers in this Group.
+
+ARGUMENT:: rawArray
+An link::Classes/Int8Array:: containing the bytes of the OSC message to send.
+
+METHOD:: sendMsg
+Send a message without timestamp to the Peers in this Group.
+
+ARGUMENT:: ... args
+An OSC path and one or more OSC args.
+
+METHOD:: sendBundle
+Send an OSC bundle with timestamp to the Peers in this Group.
+
+ARGUMENT:: time
+A time offset from logical now in seconds.
+
+ARGUMENT:: ... args
+One or more Arrays consisting of an OSC path and one or more OSC args.
