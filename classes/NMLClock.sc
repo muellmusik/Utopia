@@ -60,10 +60,6 @@ FollowerClock : Clock {
 		if (phase < 0) { phase = phase % quant };
 		^roundUp(this.beats - baseBarBeat - (phase % quant), quant) + baseBarBeat + phase
 	}
-
-	timeToNextBeat { arg quant=1.0; // logical time to next beat
-		^quant.nextTimeOnGrid(this) - this.beats
-	}
 }
 
 ConductorClock {
