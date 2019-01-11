@@ -160,7 +160,7 @@ BeaconClock : TempoClock {
 				count = msg[2];
 				numReplies = msg[3];
 				onlinePeers = addrBook.onlinePeers;
-				if((name != addrBook.me.name && numReplies == onlinePeers.size) || (numReplies < 3 && (numReplies > 0) && numReplies == onlinePeers.size), { // ignore my own beacons if possible
+				if(((name != addrBook.me.name) && (numReplies == (onlinePeers.size-1))) || ((numReplies < 3) && (numReplies > 0) && (numReplies == onlinePeers.size)), { // ignore my own beacons if possible
 					//(addrBook.me.name ++ "received Beacon").postln;
 					beaconKey = (name ++ count).asSymbol;
 					myBeats = this.secs2beats(time);
