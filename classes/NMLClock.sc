@@ -299,4 +299,7 @@ BeaconClock : TempoClock {
 		if(bool, {CmdPeriod.add(this)}, {CmdPeriod.remove(this)});
 		super.permanent_(bool);
 	}
+
+	// for compatibility with SCClockMeterSync (to sync up barlines)
+	numPeers { ^addrBook.onlinePeers.size }
 }
